@@ -1,0 +1,88 @@
+<header class="fixed inset-x-0 top-0 z-[997] flex h-header items-center bg-white pl-5 shadow-header">
+  <div class="flex items-center justify-between xl:w-[280px]">
+    <a routerLink="/dashboard" class="flex items-center gap-2">
+      <pms-logo />
+      <span class="hidden font-heading text-[26px] font-bold text-navy lg:block">PMS</span>
+    </a>
+
+    <button type="button" (click)="toggleSidebar()" aria-label="Toggle sidebar" [attr.aria-expanded]="sidebarVisible()"
+            class="ml-4 cursor-pointer rounded p-1 text-navy hover:bg-primary-soft xl:ml-0">
+      <pms-icon name="menu" size="size-8" />
+    </button>
+  </div>
+
+  <nav class="ms-auto pr-5" aria-label="User menu">
+    <button type="button" [cdkMenuTriggerFor]="userMenu" class="flex cursor-pointer items-center gap-2 text-navy">
+      <span class="flex size-9 items-center justify-center rounded-full bg-primary-soft font-heading text-sm font-bold text-primary">
+        {{ initials() }}
+      </span>
+      <span class="hidden text-sm font-semibold md:block">{{ session.user()?.name }}</span>
+      <span class="hidden md:block"><pms-icon name="chevron-down" size="size-4" /></span>
+    </button>
+  </nav>
+</header>
+
+<ng-template #userMenu>
+  <div cdkMenu class="mt-2 w-60 rounded bg-white py-1 shadow-dropdown ring-1 ring-black/5">
+    <div class="px-4 py-3 text-center">
+      <p class="font-heading text-lg font-semibold text-[#444]">{{ session.user()?.name }}</p>
+      @if (session.primaryRole(); as role) {
+        <p class="text-sm text-[#888]">{{ role.label }}</p>
+      }
+    </div>
+    <hr class="border-line">
+    <a cdkMenuItem routerLink="/account/profile"
+       class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-body hover:bg-primary-soft focus:bg-primary-soft focus:outline-none">
+      <pms-icon name="user" size="size-[18px]" /> My Profile
+    </a>
+    <hr class="border-line">
+    <button cdkMenuItem type="button" (cdkMenuItemTriggered)="signOut()"
+            class="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-sm text-body hover:bg-primary-soft focus:bg-primary-soft focus:outline-none">
+      <pms-icon name="logout" size="size-[18px]" /> Sign Out
+    </button>
+  </div>
+</ng-template>
+
+<aside class="fixed bottom-0 left-0 top-header z-[996] w-sidebar overflow-y-auto bg-white p-5 shadow-header transition-transform duration-300"
+       [class]="sidebarVisible() ? 'translate-x-0' : '-translate-x-full'" aria-label="Main navigation">
+  <ul class="space-y-1">
+    @for (section of nav; track $index) {
+      @if (section.heading) {
+        <li class="px-[15px] pt-4 pb-1 text-[11px] font-semibold uppercase text-muted">{{ section.heading }}</li>
+      }
+      @for (item of section.items; track item.link) {
+        <li>
+          <a [routerLink]="item.link" routerLinkActive="bg-primary-soft! text-primary!" #rla="routerLinkActive"
+             [attr.aria-current]="rla.isActive ? 'page' : null"
+             class="group flex items-center gap-2.5 rounded bg-white px-[15px] py-2.5 text-[15px] font-semibold text-navy transition hover:bg-primary-soft hover:text-primary">
+            <span [class]="rla.isActive ? 'text-primary' : 'text-muted group-hover:text-primary'">
+              <pms-icon [name]="item.icon" size="size-4" />
+            </span>
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    }
+  </ul>
+</aside>
+
+@if (!desktop() && mobileOpen()) {
+  <div class="fixed inset-0 top-header z-[995] bg-navy/30" (click)="mobileOpen.set(false)" aria-hidden="true"></div>
+}
+
+<main class="mt-header min-h-[calc(100vh-var(--spacing-header))] px-5 py-5 transition-[margin] duration-300 sm:px-[30px]"
+      [class]="contentOffset()">
+  @if (appVersion.updateAvailable()) {
+    <div class="pms-alert-success mb-5 flex items-center justify-between gap-4" role="status">
+      <span>A new version of PMS is available.</span>
+      <button type="button" class="pms-btn-primary" (click)="reload()">Reload</button>
+    </div>
+  }
+
+  <router-outlet />
+</main>
+
+<footer class="border-t border-[#cddfff] py-5 text-center text-sm text-navy transition-[margin] duration-300"
+        [class]="contentOffset()">
+  &copy; {{ year }} <strong class="font-semibold">PMS</strong>. All rights reserved.
+</footer>

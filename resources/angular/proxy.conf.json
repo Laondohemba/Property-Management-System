@@ -1,0 +1,12 @@
+{
+  "/bff": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/sanctum": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/login": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/logout": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/two-factor-challenge": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/forgot-password": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/reset-password": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/user": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/broadcasting": { "target": "http://127.0.0.1:8000", "secure": false },
+  "/up": { "target": "http://127.0.0.1:8000", "secure": false }
+}

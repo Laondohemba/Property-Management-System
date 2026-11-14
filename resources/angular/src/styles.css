@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+
+@plugin '@tailwindcss/forms';
+
+/*
+ * Design tokens derived from the NiceAdmin reference UI (specifications/NiceAdmin).
+ * Utilities: bg-primary, text-navy, text-muted, bg-page, shadow-card, font-heading, font-display ...
+ */
+@theme {
+  --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #4154f1;
+  --color-primary-hover: #2c3fd9;
+  --color-primary-soft: #f6f9ff;
+  --color-navy: #012970;
+  --color-muted: #899bbd;
+  --color-subtle: #aab7cf;
+  --color-page: #f6f9ff;
+  --color-line: #ebeef4;
+  --color-body: #444444;
+  --color-danger: #dc3545;
+  --color-success: #198754;
+
+  --shadow-card: 0 0 30px rgba(1, 41, 112, 0.1);
+  --shadow-header: 0 2px 20px rgba(1, 41, 112, 0.1);
+  --shadow-dropdown: 0 5px 30px rgba(82, 63, 105, 0.2);
+
+  --spacing-header: 60px;
+  --spacing-sidebar: 300px;
+}
+
+@layer base {
+  body {
+    @apply bg-page font-sans text-body antialiased;
+  }
+
+  a {
+    @apply text-primary;
+  }
+}
+
+/* Base button, declared as a utility so the variants below can @apply it. */
+@utility pms-btn {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+/* Shared building blocks used across feature templates. */
+@layer components {
+  .pms-label {
+    @apply mb-2 block text-sm text-body;
+  }
+
+  .pms-input {
+    @apply block w-full rounded border-[#dee2e6] text-sm text-body placeholder:text-subtle focus:border-[#a0aaf8] focus:ring-4 focus:ring-primary/25 disabled:bg-gray-100;
+  }
+
+  .pms-input.is-invalid {
+    @apply border-danger focus:border-danger focus:ring-danger/25;
+  }
+
+  .pms-checkbox {
+    @apply rounded border-[#dee2e6] text-primary focus:ring-primary/25;
+  }
+
+  .pms-btn-primary {
+    @apply pms-btn bg-primary text-white hover:bg-primary-hover focus:ring-primary/30;
+  }
+
+  .pms-btn-secondary {
+    @apply pms-btn border border-[#6c757d] bg-white text-[#6c757d] hover:bg-[#6c757d] hover:text-white focus:ring-gray-300;
+  }
+
+  .pms-btn-danger {
+    @apply pms-btn bg-danger text-white hover:bg-[#bb2d3b] focus:ring-red-300;
+  }
+
+  .pms-card {
+    @apply mb-[30px] rounded-[5px] bg-white px-5 pb-5 shadow-card;
+  }
+
+  .pms-card-title {
+    @apply pt-5 pb-[15px] font-display text-lg font-medium text-navy;
+  }
+
+  .pms-alert-success {
+    @apply rounded border border-[#badbcc] bg-[#d1e7dd] px-4 py-3 text-sm text-[#0f5132];
+  }
+
+  .pms-alert-danger {
+    @apply rounded border border-[#f5c2c7] bg-[#f8d7da] px-4 py-3 text-sm text-[#842029];
+  }
+
+  .pms-field-error {
+    @apply mt-1.5 text-sm text-danger;
+  }
+}

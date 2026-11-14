@@ -1,0 +1,92 @@
+<section class="pms-card">
+  <h2 class="pms-card-title flex items-center gap-2">
+    <pms-icon name="shield" size="size-5" />
+    Two-Factor Authentication
+    @if (enabled()) {
+      <span class="rounded bg-[#d1e7dd] px-2 py-0.5 text-xs font-semibold text-[#0f5132]">Enabled</span>
+    } @else {
+      <span class="rounded bg-[#e2e3e5] px-2 py-0.5 text-xs font-semibold text-[#41464b]">Disabled</span>
+    }
+  </h2>
+  <p class="text-sm text-muted">
+    Protect your account with a time-based code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password, …).
+  </p>
+
+  @if (error(); as message) {
+    <div class="pms-alert-danger mt-4" role="alert">{{ message }}</div>
+  }
+
+  @switch (step()) {
+    @case ('confirm-password') {
+      <form [formGroup]="passwordForm" (ngSubmit)="confirmPassword()" class="mt-5 max-w-xl space-y-4" novalidate>
+        <p class="text-sm">For your security, please confirm your password to continue.</p>
+        <div>
+          <label for="confirm_password" class="pms-label">Password</label>
+          <input id="confirm_password" type="password" formControlName="password" autocomplete="current-password" class="pms-input" />
+          <pms-field-error [control]="passwordForm.controls.password" />
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" class="pms-btn-primary" [disabled]="busy()">Confirm</button>
+          <button type="button" class="pms-btn-secondary" (click)="cancel()">Cancel</button>
+        </div>
+      </form>
+    }
+
+    @case ('setup') {
+      <div class="mt-5 max-w-xl space-y-4">
+        <p class="text-sm">Scan this QR code with your authenticator app, then enter the 6-digit code it shows.</p>
+        <div class="inline-block rounded border border-line bg-white p-3" [innerHTML]="qrCode()"></div>
+        @if (secretKey(); as key) {
+          <p class="text-sm">
+            Can't scan it? Enter this key manually:
+            <code class="ml-1 rounded bg-primary-soft px-2 py-1 font-mono text-navy">{{ key }}</code>
+          </p>
+        }
+        <form [formGroup]="codeForm" (ngSubmit)="confirmSetup()" class="space-y-4" novalidate>
+          <div>
+            <label for="setup_code" class="pms-label">Authentication code</label>
+            <input id="setup_code" type="text" inputmode="numeric" maxlength="6" formControlName="code" autocomplete="one-time-code"
+                   class="pms-input max-w-[200px] tracking-[0.4em]" />
+            <pms-field-error [control]="codeForm.controls.code" />
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="pms-btn-primary" [disabled]="busy()">Confirm &amp; Enable</button>
+            <button type="button" class="pms-btn-secondary" (click)="cancel()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @case ('recovery-codes') {
+      <div class="mt-5 max-w-xl space-y-4">
+        <p class="text-sm">
+          Store these recovery codes somewhere safe. Each one can be used once to sign in if you lose access to your authenticator app.
+        </p>
+        <ul class="grid grid-cols-2 gap-2 rounded bg-primary-soft p-4 font-mono text-sm text-navy">
+          @for (code of recoveryCodes(); track code) {
+            <li>{{ code }}</li>
+          }
+        </ul>
+        <div class="flex flex-wrap gap-3">
+          <button type="button" class="pms-btn-secondary" (click)="regenerateRecoveryCodes()" [disabled]="busy()">
+            <pms-icon name="refresh" size="size-4" /> Regenerate codes
+          </button>
+          <button type="button" class="pms-btn-primary" (click)="step.set('idle')">Done</button>
+        </div>
+      </div>
+    }
+
+    @default {
+      <div class="mt-5 flex flex-wrap gap-3">
+        @if (enabled()) {
+          <button type="button" class="pms-btn-secondary" (click)="showRecoveryCodes()" [disabled]="busy()">
+            <pms-icon name="key" size="size-4" /> Show recovery codes
+          </button>
+          <button type="button" class="pms-btn-danger" (click)="disable()" [disabled]="busy()">Disable</button>
+        } @else {
+          <button type="button" class="pms-btn-primary" (click)="enable()" [disabled]="busy()">Enable two-factor</button>
+        }
+      </div>
+    }
+  }
+</section>

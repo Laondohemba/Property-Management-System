@@ -1,0 +1,13 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "concurrently -k -c \"#93c5fd,#c4b5fd,#fdba74\" -n api,queue,spa \"php artisan serve --port=8000\" \"php artisan queue:listen --tries=1\" \"npm --prefix resources/angular start\"",
+        "build": "npm --prefix resources/angular run build:publish",
+        "test": "npm --prefix resources/angular run test:ci"
+    },
+    "devDependencies": {
+        "concurrently": "^10.0.3"
+    }
+}
