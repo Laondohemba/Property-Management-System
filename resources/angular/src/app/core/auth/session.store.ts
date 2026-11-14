@@ -56,6 +56,14 @@ export const SessionStore = signalStore(
     /** Role at the active property (or the organisation-wide role for Super Admins). */
     primaryRole: computed(() => session()?.active_property?.role ?? session()?.roles[0] ?? null),
     permissions: computed(() => new Set(session()?.permissions ?? [])),
+    /** A role requires 2FA and the user has not enabled it yet (SYS-01). */
+    mustSetUpTwoFactor: computed(() => {
+      const user = session()?.user;
+
+      return !!user && user.two_factor_required && !user.two_factor_enabled;
+    }),
+    /** May open staff administration (at least one property, or organisation-wide). */
+    canManageStaff: computed(() => (session()?.is_super_admin ?? false) || (session()?.permissions ?? []).includes('users.manage')),
   })),
   withMethods((store, http = inject(HttpClient)) => {
     let pending: Promise<boolean> | null = null;

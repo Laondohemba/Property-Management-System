@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard } from './core/auth/guards';
+import { authGuard, guestGuard, twoFactorEnrollmentGuard } from './core/auth/guards';
 
 /** Feature routes are lazy-loaded per module (spec §11.1). */
 export const routes: Routes = [
@@ -14,6 +14,7 @@ export const routes: Routes = [
   {
     path: '',
     canActivate: [authGuard],
+    canActivateChild: [twoFactorEnrollmentGuard],
     loadComponent: () => import('./layout/shell').then((m) => m.Shell),
     children: [
       {

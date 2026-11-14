@@ -81,6 +81,11 @@ export const bffInterceptor: HttpInterceptorFn = (req, next) => {
         signOut();
       }
 
+      // A role now requires 2FA (e.g. changed by an admin mid-session): send the user to set it up.
+      if (error.status === 403 && (error.error as { code?: string } | null)?.code === 'two_factor_required') {
+        void session.load().then(() => router.navigate(['/account/profile']));
+      }
+
       return throwError(() => error);
     }),
   );

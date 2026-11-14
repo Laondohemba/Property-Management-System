@@ -6,12 +6,14 @@ namespace App\Modules\Identity\Models;
 
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Enums\Role as RoleEnum;
+use App\Modules\Identity\Policies\UserPolicy;
 use App\Modules\Property\Models\Organization;
 use App\Modules\Property\Models\Property;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,12 +22,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['organization_id', 'name', 'email', 'password', 'is_active'])]
+#[Fillable(['organization_id', 'name', 'email', 'password', 'is_active', 'invited_at', 'invited_by'])]
 #[Hidden(['id', 'organization_id', 'password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 #[UseFactory(UserFactory::class)]
+#[UsePolicy(UserPolicy::class)]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -176,6 +178,61 @@ class User extends Authenticatable
     }
 
     /**
+     * invited: has not accepted the invitation yet; inactive: deactivated; active otherwise.
+     */
+    public function status(): string
+    {
+        return match (true) {
+            ! $this->is_active => 'inactive',
+            $this->invited_at !== null && $this->email_verified_at === null => 'invited',
+            default => 'active',
+        };
+    }
+
+    /**
+     * Every role the user holds: Super Admin (organisation-wide) plus their role at each property.
+     *
+     * @return list<string>
+     */
+    public function allRoleNames(): array
+    {
+        $propertyRoleIds = $this->properties()->pluck('property_user.role_id')->unique();
+        $propertyRoles = $propertyRoleIds->isEmpty() ? [] : Role::query()->whereKey($propertyRoleIds)->pluck('name')->all();
+
+        return array_values(array_unique([...$this->getRoleNames()->all(), ...$propertyRoles]));
+    }
+
+    /**
+     * True when one of the user's roles requires two-factor authentication in their organisation (SYS-01).
+     */
+    public function requiresTwoFactor(): bool
+    {
+        $required = $this->organization?->twoFactorRoles() ?? [];
+
+        return $required !== [] && array_intersect($required, $this->allRoleNames()) !== [];
+    }
+
+    public function mustSetUpTwoFactor(): bool
+    {
+        return ! $this->hasTwoFactorEnabled() && $this->requiresTwoFactor();
+    }
+
+    /**
+     * Properties whose staff access this user may manage.
+     *
+     * @return list<int>
+     */
+    public function manageablePropertyIds(): array
+    {
+        if ($this->isSuperAdmin()) {
+            return Property::withoutGlobalScopes()->where('organization_id', $this->organization_id)->pluck('id')
+                ->map(fn (mixed $id): int => (int) $id)->all();
+        }
+
+        return $this->propertyIdsWithPermission(Permission::UsersManage);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -185,6 +242,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'invited_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'is_active' => 'boolean',
             'password' => 'hashed',

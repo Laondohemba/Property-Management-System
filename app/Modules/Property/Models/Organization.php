@@ -57,6 +57,28 @@ class Organization extends Model
     }
 
     /**
+     * Role names whose holders must use two-factor authentication (SYS-01).
+     *
+     * @return list<string>
+     */
+    public function twoFactorRoles(): array
+    {
+        return array_values($this->settings['two_factor_roles'] ?? []);
+    }
+
+    public function setTwoFactorRequired(string $roleName, bool $required): void
+    {
+        $roles = collect($this->twoFactorRoles())
+            ->reject(fn (string $name): bool => $name === $roleName)
+            ->when($required, fn ($roles) => $roles->push($roleName))
+            ->values()
+            ->all();
+
+        $this->settings = [...($this->settings ?? []), 'two_factor_roles' => $roles];
+        $this->save();
+    }
+
+    /**
      * @return HasMany<Property, $this>
      */
     public function properties(): HasMany

@@ -14,6 +14,11 @@ export const AUTH_ROUTES: Routes = [
     loadComponent: () => import('./forgot-password.page').then((m) => m.ForgotPasswordPage),
   },
   {
+    path: 'invitation/:token',
+    title: 'Accept invitation',
+    loadComponent: () => import('./accept-invitation.page').then((m) => m.AcceptInvitationPage),
+  },
+  {
     path: 'password/reset/:token',
     title: 'Choose a new password',
     loadComponent: () => import('./reset-password.page').then((m) => m.ResetPasswordPage),

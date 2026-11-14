@@ -61,6 +61,73 @@ enum Permission: string
         return explode('.', $this->value)[0];
     }
 
+    public function label(): string
+    {
+        return match ($this) {
+            self::DashboardView => 'View dashboard',
+            self::ReservationsView => 'View reservations',
+            self::ReservationsCreate => 'Create reservations',
+            self::ReservationsUpdate => 'Modify reservations',
+            self::ReservationsAssign => 'Assign and move rooms',
+            self::ReservationsCancel => 'Cancel and no-show',
+            self::FrontdeskCheckin => 'Check in',
+            self::FrontdeskCheckout => 'Check out',
+            self::GuestsView => 'View guests',
+            self::GuestsCreate => 'Create guests',
+            self::GuestsUpdate => 'Edit guests',
+            self::GuestsMerge => 'Merge guests',
+            self::RatesManage => 'Manage rates and restrictions',
+            self::InventoryManage => 'Manage allotments and blocks',
+            self::ChannelsManage => 'Manage channels',
+            self::HousekeepingView => 'View housekeeping board',
+            self::HousekeepingUpdate => 'Update room status',
+            self::MaintenanceView => 'View work orders',
+            self::MaintenanceUpdate => 'Manage work orders',
+            self::BillingView => 'View folios and invoices',
+            self::BillingPost => 'Post charges',
+            self::BillingAdjust => 'Reverse and transfer charges',
+            self::PaymentsTake => 'Take payments',
+            self::PaymentsRefund => 'Refund payments',
+            self::NightAuditRun => 'Run night audit',
+            self::ReportsView => 'View reports',
+            self::AuditView => 'View audit log',
+            self::SettingsProperty => 'Edit property details',
+            self::SettingsRooms => 'Manage rooms and room types',
+            self::SettingsTaxes => 'Manage taxes and charge codes',
+            self::SettingsPolicies => 'Manage policies',
+            self::SettingsTemplates => 'Manage document templates',
+            self::UsersManage => 'Manage staff access',
+            self::IntegrationsManage => 'Manage integrations',
+        };
+    }
+
+    public static function groupLabel(string $group): string
+    {
+        return match ($group) {
+            'frontdesk' => 'Front desk',
+            'audit' => 'Audit and night audit',
+            default => ucfirst($group),
+        };
+    }
+
+    /**
+     * The permission catalogue grouped for the matrix editor.
+     *
+     * @return list<array{group: string, label: string, permissions: list<array{name: string, label: string}>}>
+     */
+    public static function catalogue(): array
+    {
+        $groups = [];
+
+        foreach (self::cases() as $permission) {
+            $groups[$permission->group()]['group'] = $permission->group();
+            $groups[$permission->group()]['label'] = self::groupLabel($permission->group());
+            $groups[$permission->group()]['permissions'][] = ['name' => $permission->value, 'label' => $permission->label()];
+        }
+
+        return array_values($groups);
+    }
+
     /**
      * @return list<string>
      */

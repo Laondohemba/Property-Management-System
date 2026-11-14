@@ -35,6 +35,8 @@ class SessionResource extends JsonResource
                 'name' => $this->name,
                 'email' => $this->email,
                 'two_factor_enabled' => $this->hasTwoFactorEnabled(),
+                // One of the user's roles requires 2FA (SYS-01); the SPA sends them to set it up.
+                'two_factor_required' => $this->requiresTwoFactor(),
                 'last_login_at' => $this->last_login_at?->toIso8601ZuluString(),
             ],
             'organization' => $this->organization ? [
@@ -55,7 +57,7 @@ class SessionResource extends JsonResource
      */
     private function propertySummary(Property $property, bool $superAdmin): array
     {
-        $role = $superAdmin ? Role::SuperAdmin->value : $this->roleForProperty($property)?->name;
+        $role = $superAdmin ? null : $this->roleForProperty($property);
 
         return [
             'id' => $property->public_id,
@@ -64,7 +66,11 @@ class SessionResource extends JsonResource
             'timezone' => $property->timezone,
             'currency' => $property->currency,
             'business_date' => $property->business_date?->toDateString(),
-            'role' => $role ? self::role($role) : null,
+            'role' => match (true) {
+                $superAdmin => self::role(Role::SuperAdmin->value),
+                $role !== null => ['name' => $role->name, 'label' => $role->displayLabel()],
+                default => null,
+            },
         ];
     }
 

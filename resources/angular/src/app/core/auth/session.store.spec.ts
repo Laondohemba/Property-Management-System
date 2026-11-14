@@ -20,7 +20,7 @@ const beta: SessionProperty = { ...alpha, id: '01JBETA', name: 'Beta Hotel', cod
 
 function session(active: SessionProperty | null, permissions: string[] = ['dashboard.view']): SessionData {
   return {
-    user: { id: '01JTEST', name: 'Ada Admin', email: 'ada@example.com', two_factor_enabled: false, last_login_at: null },
+    user: { id: '01JTEST', name: 'Ada Admin', email: 'ada@example.com', two_factor_enabled: false, two_factor_required: false, last_login_at: null },
     organization: { id: '01JORG', name: 'Demo Hotels' },
     is_super_admin: false,
     roles: [],

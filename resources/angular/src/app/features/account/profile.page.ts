@@ -15,6 +15,13 @@ import { TwoFactorSettings } from './two-factor-settings';
   template: `
     <pms-page-title title="Profile" [breadcrumbs]="[{ label: 'Account' }, { label: 'Profile' }]" />
 
+    @if (session.mustSetUpTwoFactor()) {
+      <div class="pms-alert-danger mb-5" role="alert">
+        <strong>Two-factor authentication is required for your role.</strong>
+        Set it up below to continue using PMS.
+      </div>
+    }
+
     <div class="grid gap-x-[30px] xl:grid-cols-[1fr_2fr]">
       <div>
         <section class="pms-card">

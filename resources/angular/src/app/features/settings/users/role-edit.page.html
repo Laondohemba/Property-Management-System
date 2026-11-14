@@ -1,0 +1,93 @@
+<pms-page-title
+  [title]="isNew() ? 'New Custom Role' : (role()?.label ?? 'Role')"
+  [breadcrumbs]="[{ label: 'Settings' }, { label: 'Roles', link: '/settings/roles' }, { label: isNew() ? 'New' : readOnly() ? 'View' : 'Edit' }]" />
+
+@if (error(); as message) {
+  <div class="pms-alert-danger mb-5" role="alert">{{ message }}</div>
+}
+@if (saved()) {
+  <div class="pms-alert-success mb-5" role="status">Role saved. Changes apply to everyone holding it.</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="grid gap-x-[30px] xl:grid-cols-[1fr_2fr]">
+    <section class="pms-card self-start">
+      <h2 class="pms-card-title">Role</h2>
+
+      @if (readOnly()) {
+        <p class="mb-4 text-sm text-muted">
+          This is a built-in role and its permissions can't be changed. You can still require two-factor authentication for it,
+          or duplicate it to create a custom role.
+        </p>
+        <p class="mb-2 text-lg font-semibold text-navy">{{ role()?.label }}</p>
+      } @else {
+        <div>
+          <label for="label" class="pms-label">Name</label>
+          <input id="label" type="text" formControlName="label" class="pms-input" />
+          <pms-field-error [control]="form.controls.label" />
+        </div>
+        <div class="mt-4">
+          <label for="description" class="pms-label">Description</label>
+          <textarea id="description" rows="3" formControlName="description" class="pms-input"></textarea>
+          <pms-field-error [control]="form.controls.description" />
+        </div>
+      }
+
+      <label for="requires_two_factor" class="mt-4 flex items-start gap-2">
+        <input id="requires_two_factor" type="checkbox" formControlName="requires_two_factor" class="pms-checkbox mt-0.5" />
+        <span class="text-sm">Require two-factor authentication for staff with this role</span>
+      </label>
+
+      @if (role(); as current) {
+        <p class="mt-4 text-sm text-muted">Held by {{ current.users_count }} {{ current.users_count === 1 ? 'person' : 'people' }}.</p>
+      }
+
+      <div class="mt-5 flex flex-wrap gap-3">
+        <button type="submit" class="pms-btn-primary" [disabled]="saving() || loading()">
+          {{ saving() ? 'Saving…' : isNew() ? 'Create Role' : 'Save' }}
+        </button>
+        @if (role(); as current) {
+          @if (!current.is_super_admin) {
+            <a [routerLink]="['/settings/roles/new']" [queryParams]="{ from: current.name }" class="pms-btn-secondary">Duplicate</a>
+          }
+          @if (!current.is_system) {
+            <button type="button" class="pms-btn-danger" (click)="remove()" [disabled]="current.users_count > 0"
+                    [attr.title]="current.users_count > 0 ? 'Reassign staff before deleting this role' : null">Delete</button>
+          }
+        }
+      </div>
+    </section>
+
+    <section class="pms-card">
+      <h2 class="pms-card-title">Permissions <span class="text-sm font-normal text-muted">| {{ selected().size }} selected</span></h2>
+      @if (role()?.is_super_admin) {
+        <p class="mb-4 text-sm text-muted">Super Admins can do everything in every property of the organisation.</p>
+      }
+
+      <div class="grid gap-x-8 gap-y-5 md:grid-cols-2">
+        @for (group of groups(); track group.group) {
+          <fieldset>
+            <legend class="mb-2 flex items-center gap-2 font-heading text-sm font-bold uppercase text-navy">
+              @if (!readOnly()) {
+                <input type="checkbox" class="pms-checkbox" [checked]="groupState(group) === 'all'" [indeterminate]="groupState(group) === 'some'"
+                       (change)="toggleGroup(group, $any($event.target).checked)" [attr.aria-label]="'All ' + group.label + ' permissions'" />
+              }
+              {{ group.label }}
+            </legend>
+            <div class="space-y-1.5">
+              @for (permission of group.permissions; track permission.name) {
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" class="pms-checkbox" [checked]="isChecked(permission.name)" [disabled]="readOnly()"
+                         (change)="toggle(permission.name, $any($event.target).checked)" />
+                  <span class="text-sm" [class.text-muted]="readOnly() && !isChecked(permission.name)">{{ permission.label }}</span>
+                </label>
+              }
+            </div>
+          </fieldset>
+        }
+      </div>
+    </section>
+  </div>
+</form>
+
+<a routerLink="/settings/roles" class="pms-btn-secondary">Back to roles</a>

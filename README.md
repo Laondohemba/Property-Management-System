@@ -78,7 +78,7 @@ To create a real organisation and its first administrator:
 php artisan pms:create-super-admin
 ```
 
-There is no public sign-up; further staff will be invited from inside the application.
+There is no public sign-up. Staff are invited from **Settings → Users**; the invitation e-mail contains a link to set a password. With the default `MAIL_MAILER=log`, e-mails are written to `storage/logs/laravel.log`, and they are sent by the queue worker that `npm run dev` starts.
 
 ## Scripts
 

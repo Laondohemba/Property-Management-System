@@ -13,7 +13,7 @@ Platform, security and setup that every later module builds on.
 | 0.1 | **Platform and authentication.** Laravel 13 + Angular 21 monolith, private BFF (`/bff`), cookie-session auth with CSRF (Fortify + Sanctum SPA mode), TOTP two-factor, password policy, problem+json errors, Redis for sessions, cache and queues | ✅ |
 | 0.2 | **Properties and property context.** Row-level organisation tenancy, properties, roles assigned per property, `X-Property-Id` validation, default permission matrix, property settings screens, dashboard endpoint | ✅ |
 | 0.3 | **Rooms and room types.** Room types with capacity, bed configuration and amenities; rooms with floors, sort order, bulk range creation and housekeeping/occupancy status fields; amenity catalogue; dashboard room counts | ✅ |
-| 0.4 | **Users and roles administration.** Invite staff, activate/deactivate, assign roles per property, permission matrix editor, enforce 2FA by role | ⬜ |
+| 0.4 | **Users and roles administration.** Staff invitations with set-password links, activate/deactivate, Super Admin management, roles per property, custom roles with a permission matrix editor, 2FA enforceable by role | ✅ |
 | 0.5 | **Generated BFF types.** TypeScript types generated from backend resources, checked in CI | ⬜ |
 | 0.6 | **Audit logging base.** Activity log for data changes and security events | ⬜ |
 | 0.7 | **Quality gates.** Architecture tests for module boundaries, static analysis, linting, CI pipeline | ⬜ |

@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
 
 import { SessionStore } from './session.store';
 
@@ -40,6 +40,20 @@ export function permissionGuard(check: (session: InstanceType<typeof SessionStor
     return check(session) ? true : inject(Router).createUrlTree(['/dashboard']);
   };
 }
+
+/**
+ * Users whose role requires two-factor authentication must set it up before using
+ * anything else (the server enforces the same rule with 403 two_factor_required).
+ */
+export const twoFactorEnrollmentGuard: CanActivateChildFn = (_route, state) => {
+  const session = inject(SessionStore);
+
+  if (!session.mustSetUpTwoFactor() || state.url.startsWith('/account/profile')) {
+    return true;
+  }
+
+  return inject(Router).createUrlTree(['/account/profile']);
+};
 
 /** Accept only same-app paths as post-login destinations (prevents open redirects). */
 export function safeReturnUrl(url: string | null | undefined): string {

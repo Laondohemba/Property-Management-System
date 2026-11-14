@@ -21,6 +21,9 @@ import { FieldError } from '../../shared/ui/field-error';
     @if (status() === 'password-reset') {
       <div class="pms-alert-success mb-4" role="status">Your password has been reset. You can now sign in.</div>
     }
+    @if (status() === 'invitation-accepted') {
+      <div class="pms-alert-success mb-4" role="status">Your account is ready. Sign in with your new password.</div>
+    }
     @if (error(); as message) {
       <div class="pms-alert-danger mb-4" role="alert">{{ message }}</div>
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AddAppVersionHeader;
 use App\Modules\Identity\Http\Middleware\EnsureAccountIsActive;
+use App\Modules\Identity\Http\Middleware\EnsureTwoFactorEnrolled;
 use App\Modules\Property\Http\Middleware\ResolvePropertyContext;
 use App\Support\Http\Problem;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -45,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle:bff',
             SubstituteBindings::class,
             EnsureAccountIsActive::class,
+            EnsureTwoFactorEnrolled::class,
         ]);
 
         // X-Property-Id validation (spec §2.7): property | property:optional | property:default.

@@ -22,6 +22,8 @@ export interface SessionUser {
   name: string;
   email: string;
   two_factor_enabled: boolean;
+  /** One of the user's roles requires 2FA in their organisation (SYS-01). */
+  two_factor_required: boolean;
   last_login_at: string | null;
 }
 
@@ -157,6 +159,50 @@ export interface RoomRangeInput {
   prefix: string | null;
   from: number;
   to: number;
+}
+
+export type StaffStatus = 'active' | 'invited' | 'inactive';
+
+export interface StaffAssignment {
+  property: { id: string; name: string; code: string };
+  role: { name: string; label: string } | null;
+}
+
+export interface StaffUser {
+  id: string;
+  name: string;
+  email: string;
+  status: StaffStatus;
+  is_active: boolean;
+  is_super_admin: boolean;
+  is_self: boolean;
+  two_factor_enabled: boolean;
+  last_login_at: string | null;
+  invited_at: string | null;
+  assignments: StaffAssignment[];
+}
+
+export interface StaffOptions {
+  properties: { id: string; name: string; code: string }[];
+  roles: { name: string; label: string; is_system: boolean }[];
+  can_manage_accounts: boolean;
+}
+
+export interface PermissionGroup {
+  group: string;
+  label: string;
+  permissions: { name: string; label: string }[];
+}
+
+export interface RoleDetail {
+  name: string;
+  label: string;
+  description: string | null;
+  is_system: boolean;
+  is_super_admin: boolean;
+  requires_two_factor: boolean;
+  permissions: string[];
+  users_count: number;
 }
 
 export interface DashboardTile {

@@ -3,7 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 
-import { authGuard, guestGuard, safeReturnUrl } from './guards';
+import { authGuard, guestGuard, safeReturnUrl, twoFactorEnrollmentGuard } from './guards';
+import { SessionStore } from './session.store';
 
 describe('route guards', () => {
   let http: HttpTestingController;
@@ -31,6 +32,47 @@ describe('route guards', () => {
     http.expectOne('/bff/session').flush({ data: { user: {}, roles: [], permissions: [], properties: [] } });
 
     expect(TestBed.inject(Router).serializeUrl((await result) as UrlTree)).toBe('/dashboard');
+  });
+});
+
+describe('twoFactorEnrollmentGuard', () => {
+  let http: HttpTestingController;
+
+  const run = (url: string) =>
+    TestBed.runInInjectionContext(() => twoFactorEnrollmentGuard({} as ActivatedRouteSnapshot, { url } as RouterStateSnapshot));
+
+  async function signIn(required: boolean, enabled: boolean): Promise<void> {
+    const loading = TestBed.inject(SessionStore).load();
+    http.expectOne('/bff/session').flush({
+      data: {
+        user: { id: '1', name: 'A', email: 'a@example.com', two_factor_enabled: enabled, two_factor_required: required, last_login_at: null },
+        organization: null,
+        is_super_admin: false,
+        roles: [],
+        permissions: [],
+        properties: [],
+        active_property: null,
+      },
+    });
+    await loading;
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  it('sends users who must set up 2FA to their profile', async () => {
+    await signIn(true, false);
+
+    expect(TestBed.inject(Router).serializeUrl(run('/dashboard') as UrlTree)).toBe('/account/profile');
+    expect(run('/account/profile')).toBeTrue();
+  });
+
+  it('lets everyone else through', async () => {
+    await signIn(true, true);
+
+    expect(run('/dashboard')).toBeTrue();
   });
 });
 

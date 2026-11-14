@@ -1,0 +1,132 @@
+<pms-page-title
+  [title]="user()?.name ?? 'User'"
+  [breadcrumbs]="[{ label: 'Settings' }, { label: 'Users', link: '/settings/users' }, { label: 'Manage' }]" />
+
+@if (message(); as text) {
+  <div class="pms-alert-success mb-5" role="status">{{ text }}</div>
+}
+@if (error(); as text) {
+  <div class="pms-alert-danger mb-5" role="alert">{{ text }}</div>
+}
+
+@if (user(); as current) {
+  <div class="grid gap-x-[30px] xl:grid-cols-[1fr_2fr]">
+    <section class="pms-card">
+      <h2 class="pms-card-title">Account</h2>
+      <dl class="space-y-3 text-sm">
+        <div><dt class="text-muted">Email</dt><dd class="font-semibold text-navy">{{ current.email }}</dd></div>
+        <div>
+          <dt class="text-muted">Status</dt>
+          <dd>
+            @switch (current.status) {
+              @case ('active') { <pms-status-badge value="active" label="Active" /> }
+              @case ('invited') { <pms-status-badge value="cleaning" label="Invitation pending" /> }
+              @case ('inactive') { <pms-status-badge value="inactive" label="Deactivated" /> }
+            }
+          </dd>
+        </div>
+        <div>
+          <dt class="text-muted">Two-factor authentication</dt>
+          <dd>{{ current.two_factor_enabled ? 'Enabled' : 'Not enabled' }}</dd>
+        </div>
+        <div>
+          <dt class="text-muted">Last sign-in</dt>
+          <dd>{{ current.last_login_at ? (current.last_login_at | date: 'medium') : 'Never' }}</dd>
+        </div>
+        @if (current.is_super_admin) {
+          <div><dt class="text-muted">Organisation role</dt><dd class="font-semibold text-navy">Super Admin (all properties)</dd></div>
+        }
+      </dl>
+
+      <div class="mt-5 flex flex-wrap gap-3">
+        @if (current.status === 'invited') {
+          <button type="button" class="pms-btn-secondary" (click)="resend()" [disabled]="busy()">Resend invitation</button>
+        }
+        @if (options()?.can_manage_accounts && !current.is_self) {
+          @if (current.is_active) {
+            <button type="button" class="pms-btn-danger" (click)="setActive(false)" [disabled]="busy()">Deactivate</button>
+          } @else {
+            <button type="button" class="pms-btn-primary" (click)="setActive(true)" [disabled]="busy()">Reactivate</button>
+          }
+          <button type="button" class="pms-btn-secondary" (click)="setSuperAdmin(!current.is_super_admin)" [disabled]="busy()">
+            {{ current.is_super_admin ? 'Remove Super Admin' : 'Make Super Admin' }}
+          </button>
+        }
+      </div>
+      @if (current.is_self) {
+        <p class="mt-3 text-xs text-muted">You can't deactivate yourself or remove your own Super Admin role.</p>
+      }
+    </section>
+
+    <section class="pms-card">
+      <h2 class="pms-card-title">Property access</h2>
+
+      @if (current.is_super_admin) {
+        <p class="mb-4 text-sm text-muted">As a Super Admin, {{ current.name }} can open every property. Property roles below apply only if that role is removed.</p>
+      }
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="border-b-2 border-line text-navy">
+            <tr>
+              <th scope="col" class="px-3 py-2 font-semibold">Property</th>
+              <th scope="col" class="px-3 py-2 font-semibold">Role</th>
+              <th scope="col" class="px-3 py-2"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (assignment of current.assignments; track assignment.property.id) {
+              <tr class="border-b border-line last:border-0">
+                <td class="px-3 py-3 font-semibold text-navy">{{ assignment.property.name }} <span class="text-xs font-normal text-muted">{{ assignment.property.code }}</span></td>
+                <td class="px-3 py-3">
+                  <label [for]="'role_' + assignment.property.id" class="sr-only">Role at {{ assignment.property.name }}</label>
+                  <select [id]="'role_' + assignment.property.id" class="pms-input max-w-xs" [disabled]="busy() || current.is_super_admin"
+                          [ngModel]="assignment.role?.name" (ngModelChange)="changeRole(assignment.property.id, $event)">
+                    @for (role of options()?.roles ?? []; track role.name) {
+                      <option [value]="role.name">{{ role.label }}</option>
+                    }
+                  </select>
+                </td>
+                <td class="px-3 py-3 text-right">
+                  @if (!current.is_super_admin) {
+                    <button type="button" class="cursor-pointer text-sm text-danger hover:underline" (click)="removeAccess(assignment.property.id, assignment.property.name)" [disabled]="busy()">
+                      Remove
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="3" class="px-3 py-6 text-center text-muted">No property access{{ current.is_super_admin ? ' needed' : '' }}.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (!current.is_super_admin && unassigned().length) {
+        <div class="mt-5 flex flex-wrap items-end gap-3 border-t border-line pt-4">
+          <div>
+            <label for="add_property" class="pms-label">Add property</label>
+            <select id="add_property" class="pms-input" [(ngModel)]="newPropertyId">
+              @for (property of unassigned(); track property.id) {
+                <option [value]="property.id">{{ property.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="add_role" class="pms-label">Role</label>
+            <select id="add_role" class="pms-input" [(ngModel)]="newRole">
+              @for (role of options()?.roles ?? []; track role.name) {
+                <option [value]="role.name">{{ role.label }}</option>
+              }
+            </select>
+          </div>
+          <button type="button" class="pms-btn-primary" (click)="addAccess()" [disabled]="busy()">Give access</button>
+        </div>
+      }
+    </section>
+  </div>
+} @else if (!error()) {
+  <p class="text-sm text-muted">Loading…</p>
+}
+
+<a routerLink="/settings/users" class="pms-btn-secondary">Back to users</a>

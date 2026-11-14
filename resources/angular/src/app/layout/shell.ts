@@ -52,6 +52,14 @@ export class Shell {
       );
     }
 
+    if (this.session.canManageStaff()) {
+      settings.push({ label: 'Users', icon: 'user', link: '/settings/users' });
+    }
+
+    if (this.session.isSuperAdmin()) {
+      settings.push({ label: 'Roles & Permissions', icon: 'key', link: '/settings/roles' });
+    }
+
     return [
       { items: [{ label: 'Dashboard', icon: 'grid', link: '/dashboard' }] },
       ...(settings.length ? [{ heading: 'Settings', items: settings }] : []),
