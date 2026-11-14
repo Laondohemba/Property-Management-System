@@ -65,15 +65,17 @@ class DemoSeeder extends Seeder
             'EXS' => ['Executive Suite', 2, 3, 2, 4, [['type' => 'king', 'count' => 1], ['type' => 'twin', 'count' => 1]], ['Wi-Fi', 'Air conditioning', 'Smart TV', 'Mini bar', 'Safe', 'Bathtub', 'Workspace'], 2],
         ];
 
-        $typeIds = [];
-        foreach ($types as $code => [$name, $base, $adults, $children, $max, $beds, $amenityNames, $sort]) {
+        $typeIds = collect($types)->map(function (array $definition, string $code) use ($owned, $amenities): int {
+            [$name, $base, $adults, $children, $max, $beds, $amenityNames, $sort] = $definition;
+
             $roomType = RoomType::withoutGlobalScopes()->firstOrCreate([...$owned, 'code' => $code], [
                 'name' => $name, 'base_occupancy' => $base, 'max_adults' => $adults, 'max_children' => $children,
                 'max_occupancy' => $max, 'bed_configuration' => $beds, 'sort_order' => $sort,
             ]);
             $roomType->amenities()->syncWithoutDetaching($amenities->only($amenityNames)->values());
-            $typeIds[$code] = $roomType->id;
-        }
+
+            return $roomType->id;
+        })->all();
 
         $layout = [
             '1' => ['STD' => range(101, 108), 'DLX' => [109, 110]],

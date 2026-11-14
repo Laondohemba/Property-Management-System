@@ -6,6 +6,8 @@ import { forkJoin, of } from 'rxjs';
 import { applyProblemToForm, toProblem } from '../../../core/bff/problem';
 import { Amenity, BedTypeOptionData, RoomType, RoomTypeInput } from '../../../core/bff/types';
 import { FieldError } from '../../../shared/ui/field-error';
+import { RecordStampsLine } from '../../../shared/ui/record-stamps';
+import { RecordHistory } from '../../audit/record-history';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { InventoryApi } from './inventory.api';
 
@@ -13,7 +15,7 @@ import { InventoryApi } from './inventory.api';
 @Component({
   selector: 'pms-room-type-edit-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError],
+  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError, RecordStampsLine, RecordHistory],
   templateUrl: './room-type-edit.page.html',
 })
 export class RoomTypeEditPage implements OnInit {

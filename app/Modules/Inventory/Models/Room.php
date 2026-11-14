@@ -6,6 +6,7 @@ namespace App\Modules\Inventory\Models;
 
 use App\Modules\Inventory\Enums\HousekeepingStatus;
 use App\Modules\Inventory\Enums\OccupancyStatus;
+use App\Support\Database\HasRecordStamps;
 use App\Support\Tenancy\BelongsToProperty;
 use Database\Factories\RoomFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -20,6 +21,20 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * A physical room (SYS-04).
+ *
+ * @property int $id
+ * @property string $public_id
+ * @property int $organization_id
+ * @property int $property_id
+ * @property int $room_type_id
+ * @property string $number
+ * @property string|null $floor
+ * @property string|null $notes
+ * @property HousekeepingStatus $housekeeping_status
+ * @property OccupancyStatus $occupancy_status
+ * @property int $sort_order
+ * @property bool $is_active
+ * @property-read RoomType $roomType
  */
 #[Fillable([
     'organization_id', 'property_id', 'room_type_id', 'number', 'floor', 'notes',
@@ -29,7 +44,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Room extends Model
 {
     /** @use HasFactory<RoomFactory> */
-    use BelongsToProperty, HasFactory, HasUlids, LogsActivity, SoftDeletes;
+    use BelongsToProperty, HasFactory, HasRecordStamps, HasUlids, LogsActivity, SoftDeletes;
 
     /**
      * @var array<string, mixed>

@@ -6,7 +6,9 @@ namespace App\Modules\Property\Models;
 
 use App\Modules\Identity\Models\User;
 use App\Modules\Property\Policies\PropertyPolicy;
+use App\Support\Database\HasRecordStamps;
 use App\Support\Tenancy\BelongsToOrganization;
+use Carbon\Carbon;
 use Database\Factories\PropertyFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -21,6 +23,31 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * A hotel or other venue within an organisation (spec §2.7, SYS-03).
+ *
+ * @property int $id
+ * @property string $public_id
+ * @property int $organization_id
+ * @property string $name
+ * @property string $code
+ * @property string $timezone
+ * @property string $currency
+ * @property Carbon|null $business_date
+ * @property string $check_in_time
+ * @property string $check_out_time
+ * @property string|null $email
+ * @property string|null $phone
+ * @property string|null $address_line1
+ * @property string|null $address_line2
+ * @property string|null $city
+ * @property string|null $state
+ * @property string|null $postal_code
+ * @property string|null $country
+ * @property array<string, mixed>|null $settings
+ * @property bool $is_active
+ * @property int|null $created_by
+ * @property int|null $updated_by
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 #[Fillable([
     'organization_id', 'name', 'code', 'timezone', 'currency', 'business_date',
@@ -32,7 +59,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Property extends Model
 {
     /** @use HasFactory<PropertyFactory> */
-    use BelongsToOrganization, HasFactory, HasUlids, LogsActivity, SoftDeletes;
+    use BelongsToOrganization, HasFactory, HasRecordStamps, HasUlids, LogsActivity, SoftDeletes;
 
     /**
      * @var array<string, mixed>

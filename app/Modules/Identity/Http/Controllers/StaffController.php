@@ -37,7 +37,7 @@ class StaffController extends Controller
         Gate::authorize('viewAny', User::class);
 
         /** @var User $actor */
-        $actor = $request->user();
+        $actor = $this->actor($request);
         $presenter = new StaffPresenter($actor);
 
         $users = $this->staffQuery($actor)
@@ -80,7 +80,7 @@ class StaffController extends Controller
         Gate::authorize('invite', [User::class, $property]);
 
         ['user' => $user, 'invited' => $invited] = $inviteUser->handle(
-            $request->user(),
+            $this->actor($request),
             $request->validated('name'),
             $request->validated('email'),
             $property,
@@ -104,7 +104,7 @@ class StaffController extends Controller
             'is_super_admin' => ['sometimes', 'boolean'],
         ]);
 
-        if ($user->is($request->user()) && (($validated['is_active'] ?? true) === false || ($validated['is_super_admin'] ?? true) === false)) {
+        if ($user->is($this->actor($request)) && (($validated['is_active'] ?? true) === false || ($validated['is_super_admin'] ?? true) === false)) {
             throw ValidationException::withMessages(['is_active' => 'You cannot deactivate yourself or remove your own Super Admin role.']);
         }
 
@@ -144,11 +144,11 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'role' => ['required', 'string', Rule::in(
-                Role::query()->visibleTo((int) $request->user()->organization_id)->assignable()->pluck('name')->all(),
+                Role::query()->visibleTo((int) $this->actor($request)->organization_id)->assignable()->pluck('name')->all(),
             )],
         ]);
 
-        $role = Role::query()->visibleTo((int) $request->user()->organization_id)->where('name', $validated['role'])->firstOrFail();
+        $role = Role::query()->visibleTo((int) $this->actor($request)->organization_id)->where('name', $validated['role'])->firstOrFail();
         $previous = $user->roleForProperty($property);
         $user->properties()->syncWithoutDetaching([$property->id => ['role_id' => $role->id]]);
 
@@ -197,7 +197,7 @@ class StaffController extends Controller
             throw ValidationException::withMessages(['user' => 'This person has already accepted their invitation.']);
         }
 
-        $sendInvitation->handle($user, $request->user());
+        $sendInvitation->handle($user, $this->actor($request));
 
         return response()->noContent();
     }
@@ -223,7 +223,7 @@ class StaffController extends Controller
      */
     private function ensureSameOrganization(Request $request, User $user): void
     {
-        if ($user->organization_id !== $request->user()->organization_id) {
+        if ($user->organization_id !== $this->actor($request)->organization_id) {
             abort(404);
         }
     }
@@ -233,7 +233,7 @@ class StaffController extends Controller
      */
     private function userResponse(Request $request, User $user, ?bool $invited = null): JsonResponse
     {
-        $presenter = new StaffPresenter($request->user());
+        $presenter = new StaffPresenter($this->actor($request));
         $user->load(['properties', 'roles']);
 
         return Bff::respond($presenter->user($user), StaffResponseMetaData::make($presenter->options(), $invited));

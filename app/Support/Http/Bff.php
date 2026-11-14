@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Support\Http;
 
 use Illuminate\Http\JsonResponse;
-use Spatie\LaravelData\Contracts\BaseData;
+use Spatie\LaravelData\Data;
 
 /**
  * BFF responses in the { data, meta } envelope (spec §8.1), built from typed DTOs so the
@@ -14,9 +14,9 @@ use Spatie\LaravelData\Contracts\BaseData;
 final class Bff
 {
     /**
-     * @param  BaseData|array<int, BaseData>  $data
+     * @param  Data|array<int, Data>  $data
      */
-    public static function respond(BaseData|array $data, ?BaseData $meta = null, int $status = 200): JsonResponse
+    public static function respond(Data|array $data, ?Data $meta = null, int $status = 200): JsonResponse
     {
         $body = ['data' => $data];
 

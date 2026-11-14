@@ -37,7 +37,7 @@ class RoomTypeController extends Controller implements HasMiddleware
     public function index(Request $request): JsonResponse
     {
         $roomTypes = RoomType::forProperty($this->context->require())
-            ->with('amenities')
+            ->with(['amenities', ...RoomType::stampRelations()])
             ->withCount('rooms')
             ->when($request->has('filter.active'), fn ($query) => $query->where('is_active', $request->boolean('filter.active')))
             ->orderBy('sort_order')
@@ -52,7 +52,7 @@ class RoomTypeController extends Controller implements HasMiddleware
 
     public function store(RoomTypeRequest $request, SaveRoomType $save): JsonResponse
     {
-        $roomType = $save->handle($request->user(), $this->context->require(), $request->validated());
+        $roomType = $save->handle($this->actor($request), $this->context->require(), $request->validated());
 
         return Bff::respond(RoomTypeData::fromModel($roomType), status: 201);
     }
@@ -69,7 +69,7 @@ class RoomTypeController extends Controller implements HasMiddleware
         $this->context->ensureOwns($roomType);
 
         return Bff::respond(RoomTypeData::fromModel(
-            $save->handle($request->user(), $this->context->require(), $request->validated(), $roomType),
+            $save->handle($this->actor($request), $this->context->require(), $request->validated(), $roomType),
         ));
     }
 }

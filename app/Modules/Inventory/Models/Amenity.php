@@ -15,6 +15,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property int $id
+ * @property string $public_id
+ * @property int $organization_id
+ * @property int $property_id
+ * @property string $name
+ */
 #[Fillable(['organization_id', 'property_id', 'name'])]
 #[UseFactory(AmenityFactory::class)]
 class Amenity extends Model

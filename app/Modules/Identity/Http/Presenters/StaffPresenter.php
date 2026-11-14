@@ -58,7 +58,7 @@ final class StaffPresenter
                 ->sortBy('name')
                 ->map(fn (Property $property): StaffAssignmentData => new StaffAssignmentData(
                     PropertyRefData::fromProperty($property),
-                    $this->role((int) $property->pivot->getAttribute('role_id')),
+                    $this->role((int) $property->getRelation('pivot')->getAttribute('role_id')),
                 ))
                 ->values()
                 ->all(),

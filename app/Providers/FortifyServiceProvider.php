@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use App\Modules\Identity\Actions\Fortify\ResetUserPassword;
@@ -40,9 +42,9 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
 
         Fortify::authenticateUsing(function (Request $request): ?User {
-            $user = User::with('organization')->where('email', $request->string(Fortify::username()))->first();
+            $user = User::with('organization')->where('email', $request->string(Fortify::username())->value())->first();
 
-            if (! $user || ! Hash::check($request->string('password'), $user->password)) {
+            if (! $user || ! Hash::check($request->string('password')->value(), $user->password)) {
                 return null;
             }
 
@@ -61,7 +63,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         // Stricter limits on login and 2FA than on the rest of the BFF (spec §8.1).
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->string(Fortify::username())).'|'.$request->ip());
+            $throttleKey = Str::transliterate($request->string(Fortify::username())->lower()->value().'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
         });

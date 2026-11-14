@@ -149,14 +149,24 @@ class AuditTrailTest extends TestCase
         $this->artisan('audit:verify')->assertSuccessful();
     }
 
-    public function test_verification_detects_tampering(): void
+    public function test_verification_detects_a_forged_entry(): void
     {
         $this->superAdmin();
         Room::factory()->for(RoomType::factory()->for($this->hotel))->create();
+        $this->artisan('audit:verify')->assertSuccessful();
 
-        // Simulate someone with database access bypassing the append-only triggers.
-        DB::unprepared('DROP TRIGGER activity_log_no_update');
-        DB::table('activity_log')->where('id', AuditEntry::min('id'))->update(['description' => 'Something else happened']);
+        // Someone with database access appends an entry without a valid hash. Inserts are possible
+        // (only UPDATE and DELETE are blocked), but they cannot produce a hash that fits the chain.
+        $last = AuditEntry::where('organization_id', $this->organization->id)->orderByDesc('id')->firstOrFail();
+        DB::table('activity_log')->insert([
+            'log_name' => 'data',
+            'description' => 'Room quietly deleted',
+            'organization_id' => $this->organization->id,
+            'prev_hash' => $last->hash,
+            'hash' => str_repeat('0', 64),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $this->artisan('audit:verify')->assertFailed();
     }

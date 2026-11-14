@@ -43,7 +43,7 @@ class RoomController extends Controller implements HasMiddleware
         $property = $this->context->require();
 
         $rooms = Room::forProperty($property)
-            ->with('roomType')
+            ->with(['roomType', ...Room::stampRelations()])
             ->when($request->filled('filter.room_type'), fn (Builder $query) => $query->whereHas(
                 'roomType',
                 fn (Builder $query) => $query->where('public_id', $request->string('filter.room_type')),
@@ -66,7 +66,7 @@ class RoomController extends Controller implements HasMiddleware
 
     public function store(RoomRequest $request, SaveRoom $save): JsonResponse
     {
-        $room = $save->handle($request->user(), $this->context->require(), $request->validated());
+        $room = $save->handle($this->actor($request), $this->context->require(), $request->validated());
 
         return Bff::respond(RoomData::fromModel($room), status: 201);
     }
@@ -77,7 +77,7 @@ class RoomController extends Controller implements HasMiddleware
     public function storeRange(RoomRangeRequest $request, CreateRoomRange $createRange): JsonResponse
     {
         $rooms = $createRange->handle(
-            $request->user(),
+            $this->actor($request),
             $this->context->require(),
             $request->validated('room_type_id'),
             $request->numbers(),
@@ -103,7 +103,7 @@ class RoomController extends Controller implements HasMiddleware
         $this->context->ensureOwns($room);
 
         return Bff::respond(RoomData::fromModel(
-            $save->handle($request->user(), $this->context->require(), $request->validated(), $room),
+            $save->handle($this->actor($request), $this->context->require(), $request->validated(), $room),
         ));
     }
 }

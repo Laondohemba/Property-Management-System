@@ -1,3 +1,7 @@
+export type ActorRefData = {
+id: string,
+name: string,
+};
 export type AmenityData = {
 id: string,
 name: string,
@@ -167,11 +171,18 @@ postal_code: string | null,
 country: string | null,
 is_active: boolean,
 updated_at: string | null,
+stamps: RecordStampsData,
 };
 export type PropertyRefData = {
 id: string,
 name: string,
 code: string,
+};
+export type RecordStampsData = {
+created_at: string | null,
+created_by: ActorRefData | null,
+updated_at: string | null,
+updated_by: ActorRefData | null,
 };
 export type Role = 'super-admin' | 'property-manager' | 'front-desk-agent' | 'revenue-manager' | 'housekeeping-supervisor' | 'housekeeping-attendant' | 'maintenance-staff' | 'accountant' | 'auditor';
 export type RoleData = {
@@ -201,6 +212,7 @@ housekeeping_status: HousekeepingStatusData,
 occupancy_status: OccupancyStatusData,
 sort_order: number,
 is_active: boolean,
+stamps: RecordStampsData,
 };
 export type RoomListMetaData = {
 floors: string[],
@@ -226,6 +238,7 @@ amenities: AmenityData[],
 rooms_count?: number,
 sort_order: number,
 is_active: boolean,
+stamps: RecordStampsData,
 };
 export type RoomTypeListMetaData = {
 bed_types: BedTypeOptionData[],

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Modules\Identity\Actions\Fortify;
 
 use App\Modules\Identity\Models\User;

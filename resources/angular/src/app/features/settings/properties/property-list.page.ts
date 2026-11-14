@@ -8,12 +8,13 @@ import { SessionStore } from '../../../core/auth/session.store';
 import { PageMeta, Property } from '../../../core/bff/types';
 import { toProblem } from '../../../core/bff/problem';
 import { PageTitle } from '../../../shared/ui/page-title';
+import { RecordStampsLine } from '../../../shared/ui/record-stamps';
 import { PropertiesApi } from './properties.api';
 
 @Component({
   selector: 'pms-property-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, PageTitle],
+  imports: [ReactiveFormsModule, RouterLink, PageTitle, RecordStampsLine],
   template: `
     <pms-page-title title="Properties" [breadcrumbs]="[{ label: 'Settings' }, { label: 'Properties' }]" />
 
@@ -45,6 +46,7 @@ import { PropertiesApi } from './properties.api';
               <th scope="col" class="px-3 py-2 font-semibold">Timezone</th>
               <th scope="col" class="px-3 py-2 font-semibold">Currency</th>
               <th scope="col" class="px-3 py-2 font-semibold">Business date</th>
+              <th scope="col" class="px-3 py-2 font-semibold">Last updated</th>
               <th scope="col" class="px-3 py-2 font-semibold">Status</th>
               <th scope="col" class="px-3 py-2"><span class="sr-only">Actions</span></th>
             </tr>
@@ -57,6 +59,7 @@ import { PropertiesApi } from './properties.api';
                 <td class="px-3 py-3">{{ property.timezone }}</td>
                 <td class="px-3 py-3">{{ property.currency }}</td>
                 <td class="px-3 py-3">{{ property.business_date }}</td>
+                <td class="px-3 py-3"><pms-record-stamps [stamps]="property.stamps" [compact]="true" /></td>
                 <td class="px-3 py-3">
                   @if (property.is_active) {
                     <span class="rounded bg-[#d1e7dd] px-2 py-0.5 text-xs font-semibold text-[#0f5132]">Active</span>
@@ -70,7 +73,7 @@ import { PropertiesApi } from './properties.api';
               </tr>
             } @empty {
               <tr>
-                <td colspan="7" class="px-3 py-8 text-center text-muted">
+                <td colspan="8" class="px-3 py-8 text-center text-muted">
                   {{ loading() ? 'Loading…' : 'No properties found.' }}
                 </td>
               </tr>

@@ -16,6 +16,7 @@ import type {
   Permission,
   PermissionGroupData,
   PropertyData,
+  RecordStampsData,
   RoleData,
   RoleRefData,
   RoomData,
@@ -71,10 +72,11 @@ export type StaffUser = StaffUserData;
 export type StaffOptions = StaffOptionsData;
 export type PermissionGroup = PermissionGroupData;
 export type RoleDetail = RoleData;
+export type RecordStamps = RecordStampsData;
 
 // Request payloads (validated by Laravel Form Requests) -----------------------
 
-export type PropertyInput = Omit<Property, 'id' | 'business_date' | 'updated_at'>;
+export type PropertyInput = Omit<Property, 'id' | 'business_date' | 'updated_at' | 'stamps'>;
 
 export interface RoomTypeInput {
   name: string;

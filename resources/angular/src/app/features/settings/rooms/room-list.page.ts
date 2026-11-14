@@ -8,6 +8,7 @@ import { SessionStore } from '../../../core/auth/session.store';
 import { toProblem } from '../../../core/bff/problem';
 import { PageMeta, Room, RoomType } from '../../../core/bff/types';
 import { PageTitle } from '../../../shared/ui/page-title';
+import { RecordStampsLine } from '../../../shared/ui/record-stamps';
 import { Pagination } from '../../../shared/ui/pagination';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { InventoryApi } from './inventory.api';
@@ -15,7 +16,7 @@ import { InventoryApi } from './inventory.api';
 @Component({
   selector: 'pms-room-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, PageTitle, Pagination, StatusBadge],
+  imports: [ReactiveFormsModule, RouterLink, PageTitle, Pagination, StatusBadge, RecordStampsLine],
   templateUrl: './room-list.page.html',
 })
 export class RoomListPage {

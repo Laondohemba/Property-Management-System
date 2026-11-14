@@ -1,0 +1,12 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    # Spec §10.2: static analysis by Larastan at level 8 or above.
+    level: 8
+    paths:
+        - app
+        - bootstrap/app.php
+
+        - database
+        - routes

@@ -18,6 +18,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Tenant root (spec §2.7). Every business table carries organization_id.
+ *
+ * @property int $id
+ * @property string $public_id
+ * @property string $name
+ * @property string $slug
+ * @property bool $is_active
+ * @property array<string, mixed>|null $settings
  */
 #[Fillable(['name', 'slug', 'is_active', 'settings'])]
 #[UseFactory(OrganizationFactory::class)]

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Property\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesActor;
 use App\Modules\Property\Models\Property;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rule;
  */
 class PropertyRequest extends FormRequest
 {
+    use ResolvesActor;
+
     public function authorize(): bool
     {
         return true;
@@ -44,7 +47,7 @@ class PropertyRequest extends FormRequest
             'code' => [
                 $required, 'string', 'max:20', 'regex:/^[A-Z0-9][A-Z0-9_-]*$/',
                 Rule::unique('properties', 'code')
-                    ->where('organization_id', $this->user()->organization_id)
+                    ->where('organization_id', $this->organizationId())
                     ->whereNull('deleted_at')
                     ->ignore($property?->id),
             ],

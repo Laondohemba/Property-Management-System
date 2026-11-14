@@ -128,3 +128,8 @@
     <a routerLink="/settings/room-types" class="pms-btn-secondary">Back to list</a>
   </div>
 </form>
+
+@if (roomType(); as current) {
+  <div class="mt-4 mb-6"><pms-record-stamps [stamps]="current.stamps" /></div>
+  <pms-record-history type="room_type" [id]="current.id" />
+}

@@ -6,7 +6,6 @@ namespace App\Modules\Property\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Enums\Permission;
-use App\Modules\Identity\Models\User;
 use App\Modules\Property\Actions\CreateProperty;
 use App\Modules\Property\Actions\UpdateProperty;
 use App\Modules\Property\DTOs\PropertyData;
@@ -28,10 +27,10 @@ class PropertySettingsController extends Controller
     {
         Gate::authorize('viewAny', Property::class);
 
-        /** @var User $user */
-        $user = $request->user();
+        $user = $this->actor($request);
 
         $properties = Property::query()
+            ->with(Property::stampRelations())
             ->when(! $user->isSuperAdmin(), fn ($query) => $query->whereIn(
                 'id',
                 $user->propertyIdsWithPermission(Permission::SettingsProperty),
@@ -53,7 +52,7 @@ class PropertySettingsController extends Controller
     {
         Gate::authorize('create', Property::class);
 
-        $property = $createProperty->handle($request->user(), $request->validated());
+        $property = $createProperty->handle($this->actor($request), $request->validated());
 
         return Bff::respond(PropertyData::fromModel($property), status: 201);
     }
@@ -69,6 +68,6 @@ class PropertySettingsController extends Controller
     {
         Gate::authorize('update', $property);
 
-        return Bff::respond(PropertyData::fromModel($updateProperty->handle($request->user(), $property, $request->validated())));
+        return Bff::respond(PropertyData::fromModel($updateProperty->handle($this->actor($request), $property, $request->validated())));
     }
 }

@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Row-level tenancy: limits queries to the signed-in user's organisation (spec §2.7).
  * Derived from the authenticated user on every query; never cached in process memory.
+ *
+ * @implements Scope<Model>
  */
 class OrganizationScope implements Scope
 {
     /**
-     * @param  Builder<Model>  $builder
+     * @param  Builder<covariant Model>  $builder
      */
     public function apply(Builder $builder, Model $model): void
     {
@@ -31,6 +33,6 @@ class OrganizationScope implements Scope
     {
         $user = Auth::user();
 
-        return $user?->getAttribute('organization_id');
+        return $user instanceof Model ? $user->getAttribute('organization_id') : null;
     }
 }

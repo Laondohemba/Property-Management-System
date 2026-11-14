@@ -19,7 +19,7 @@ class RoomTypeFactory extends Factory
     {
         return [
             'property_id' => Property::factory(),
-            'organization_id' => fn (array $attributes) => Property::withoutGlobalScopes()->find($attributes['property_id'])?->organization_id,
+            'organization_id' => fn (array $attributes) => Property::withoutGlobalScopes()->whereKey($attributes['property_id'])->value('organization_id'),
             'name' => fake()->randomElement(['Standard', 'Deluxe', 'Executive', 'Family']).' Room',
             'code' => Str::upper(Str::random(4)),
             'base_occupancy' => 2,

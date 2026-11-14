@@ -20,7 +20,7 @@ class SessionController extends Controller
     public function __invoke(Request $request, PropertyContext $context, BuildSessionView $view): JsonResponse
     {
         return Bff::respond(
-            $view->handle($request->user(), $context->property()),
+            $view->handle($this->actor($request), $context->property()),
             new SessionMetaData((string) config('app.version')),
         );
     }

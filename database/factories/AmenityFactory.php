@@ -18,7 +18,7 @@ class AmenityFactory extends Factory
     {
         return [
             'property_id' => Property::factory(),
-            'organization_id' => fn (array $attributes) => Property::withoutGlobalScopes()->find($attributes['property_id'])?->organization_id,
+            'organization_id' => fn (array $attributes) => Property::withoutGlobalScopes()->whereKey($attributes['property_id'])->value('organization_id'),
             'name' => fake()->unique()->randomElement(['Wi-Fi', 'Air conditioning', 'Mini bar', 'Safe', 'Balcony', 'Sea view', 'Smart TV', 'Kettle', 'Bathtub', 'Workspace']),
         ];
     }

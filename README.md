@@ -92,9 +92,20 @@ There is no public sign-up. Staff are invited from **Settings → Users**; the i
 | `php artisan test` | Runs the backend test suite (PHPUnit) |
 | `php artisan audit:verify` | Checks that the audit trail hash chains are intact |
 | `composer types` | Regenerates the TypeScript types for the BFF contract after a DTO or enum changes |
+| `composer check` | Pint (style), Larastan level 8 (static analysis) and the full backend test suite |
+| `npm --prefix resources/angular run lint` | ESLint for the Angular app |
 | `vendor/bin/pint` | Formats PHP code |
 
 After `npm run build`, `php artisan serve` serves the compiled SPA and the BFF from one origin, the same way Nginx does in production.
+
+## Quality checks
+
+Every pull request runs the [CI workflow](.github/workflows/ci.yml):
+
+- **Backend:** Pint, Larastan (level 8), and the PHPUnit suite against MySQL 8 and Redis 7. The suite includes architecture tests (module boundaries, strict types, layering) and fails if the generated TypeScript types are out of date. Composer dependency audit.
+- **Frontend:** ESLint, unit tests in headless Chrome, a production build and an npm dependency audit.
+
+Run `composer check` and `npm --prefix resources/angular run lint` locally before pushing.
 
 ## Project structure
 
@@ -109,7 +120,8 @@ routes/
 database/             Migrations, factories, seeders
 resources/angular/    Angular workspace (core/, layout/, shared/, features/)
 docs/                 Roadmap and project documentation
-tests/                Backend feature tests
+tests/                Backend feature and architecture tests
+.github/workflows/    CI pipeline
 ```
 
 ## Author

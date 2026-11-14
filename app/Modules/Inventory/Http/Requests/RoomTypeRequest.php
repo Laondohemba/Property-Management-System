@@ -62,6 +62,8 @@ class RoomTypeRequest extends FormRequest
 
     /**
      * Capacity must be internally consistent: base ≤ max ≤ adults + children.
+     *
+     * @return array<int, \Closure(Validator): void>
      */
     public function after(): array
     {

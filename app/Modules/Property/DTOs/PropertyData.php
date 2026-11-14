@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Property\DTOs;
 
 use App\Modules\Property\Models\Property;
+use App\Support\Http\DTOs\RecordStampsData;
 use Spatie\LaravelData\Data;
 
 /**
@@ -31,6 +32,7 @@ class PropertyData extends Data
         public ?string $country,
         public bool $is_active,
         public ?string $updated_at,
+        public RecordStampsData $stamps,
     ) {}
 
     public static function fromModel(Property $property): self
@@ -54,6 +56,7 @@ class PropertyData extends Data
             country: $property->country,
             is_active: $property->is_active,
             updated_at: $property->updated_at?->toIso8601ZuluString(),
+            stamps: RecordStampsData::fromModel($property),
         );
     }
 }

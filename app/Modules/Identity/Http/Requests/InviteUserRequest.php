@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesActor;
 use App\Modules\Identity\Enums\Role as RoleEnum;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Property\Models\Property;
@@ -13,6 +14,8 @@ use Illuminate\Validation\Rule;
 
 class InviteUserRequest extends FormRequest
 {
+    use ResolvesActor;
+
     public function authorize(): bool
     {
         return true;
@@ -26,7 +29,7 @@ class InviteUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
-            'property_id' => ['required', 'string', Rule::exists('properties', 'public_id')->where('organization_id', $this->user()->organization_id)->whereNull('deleted_at')],
+            'property_id' => ['required', 'string', Rule::exists('properties', 'public_id')->where('organization_id', $this->organizationId())->whereNull('deleted_at')],
             'role' => ['required', 'string', Rule::in($this->assignableRoleNames())],
         ];
     }
@@ -38,7 +41,7 @@ class InviteUserRequest extends FormRequest
 
     public function role(): Role
     {
-        return Role::query()->visibleTo((int) $this->user()->organization_id)->where('name', $this->validated('role'))->firstOrFail();
+        return Role::query()->visibleTo((int) $this->organizationId())->where('name', $this->validated('role'))->firstOrFail();
     }
 
     /**
@@ -46,10 +49,11 @@ class InviteUserRequest extends FormRequest
      */
     private function assignableRoleNames(): array
     {
-        return Role::query()->visibleTo((int) $this->user()->organization_id)
+        return array_values(Role::query()->visibleTo((int) $this->organizationId())
             ->where('name', '!=', RoleEnum::SuperAdmin->value)
             ->pluck('name')
-            ->all();
+            ->map(fn (mixed $name): string => (string) $name)
+            ->all());
     }
 
     /**

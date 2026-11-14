@@ -21,6 +21,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.15",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",
@@ -82,6 +83,14 @@
         ],
         "types:check": [
             "@php artisan test --filter=BffContractTest"
+        ],
+        "analyse": [
+            "@php vendor/bin/phpstan analyse --no-progress --memory-limit=2G"
+        ],
+        "check": [
+            "@php vendor/bin/pint --test",
+            "@analyse",
+            "@php artisan test"
         ]
     },
     "extra": {

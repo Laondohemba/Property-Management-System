@@ -6,6 +6,8 @@ import { forkJoin, of } from 'rxjs';
 import { applyProblemToForm, toProblem } from '../../../core/bff/problem';
 import { Room, RoomType } from '../../../core/bff/types';
 import { FieldError } from '../../../shared/ui/field-error';
+import { RecordStampsLine } from '../../../shared/ui/record-stamps';
+import { RecordHistory } from '../../audit/record-history';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { InventoryApi } from './inventory.api';
@@ -13,7 +15,7 @@ import { InventoryApi } from './inventory.api';
 @Component({
   selector: 'pms-room-edit-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError, StatusBadge],
+  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError, StatusBadge, RecordStampsLine, RecordHistory],
   template: `
     <pms-page-title
       [title]="isNew() ? 'New Room' : 'Room ' + (room()?.number ?? '')"
@@ -93,6 +95,11 @@ import { InventoryApi } from './inventory.api';
         <a routerLink="/settings/rooms" class="pms-btn-secondary">Back to list</a>
       </div>
     </form>
+
+    @if (room(); as current) {
+      <div class="mt-4 mb-6 max-w-3xl"><pms-record-stamps [stamps]="current.stamps" /></div>
+      <div class="max-w-3xl"><pms-record-history type="room" [id]="current.id" /></div>
+    }
   `,
 })
 export class RoomEditPage implements OnInit {

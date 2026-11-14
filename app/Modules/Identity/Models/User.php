@@ -9,12 +9,14 @@ use App\Modules\Identity\Enums\Role as RoleEnum;
 use App\Modules\Identity\Policies\UserPolicy;
 use App\Modules\Property\Models\Organization;
 use App\Modules\Property\Models\Property;
+use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +28,26 @@ use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property string $public_id
+ * @property int|null $organization_id
+ * @property string $name
+ * @property string $email
+ * @property Carbon|null $email_verified_at
+ * @property string $password
+ * @property bool $is_active
+ * @property Carbon|null $last_login_at
+ * @property Carbon|null $invited_at
+ * @property int|null $invited_by
+ * @property string|null $two_factor_secret
+ * @property Carbon|null $two_factor_confirmed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Organization|null $organization
+ * @property-read Collection<int, Role> $roles
+ * @property-read Collection<int, Property> $properties
+ */
 #[Fillable(['organization_id', 'name', 'email', 'password', 'is_active', 'invited_at', 'invited_by'])]
 #[Hidden(['id', 'organization_id', 'password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 #[UseFactory(UserFactory::class)]
@@ -127,8 +149,8 @@ class User extends Authenticatable
     public function roleForProperty(Property $property): ?Role
     {
         if (! array_key_exists($property->id, $this->propertyRoles)) {
-            $roleId = $this->properties()->whereKey($property->id)->first()?->pivot?->getAttribute('role_id');
-            $this->propertyRoles[$property->id] = $roleId ? Role::findById((int) $roleId, 'web') : null;
+            $roleId = $this->properties()->whereKey($property->id)->value('property_user.role_id');
+            $this->propertyRoles[$property->id] = $roleId === null ? null : Role::query()->with('permissions')->find((int) $roleId);
         }
 
         return $this->propertyRoles[$property->id];
@@ -158,7 +180,11 @@ class User extends Authenticatable
             return [];
         }
 
-        return $this->roleForProperty($property)?->permissions->pluck('name')->sort()->values()->all() ?? [];
+        $role = $this->roleForProperty($property);
+
+        return $role === null
+            ? []
+            : array_values($role->permissions->map(fn (mixed $permission): string => (string) data_get($permission, 'name'))->sort()->all());
     }
 
     /**
@@ -172,11 +198,11 @@ class User extends Authenticatable
             ->whereHas('permissions', fn (Builder $query) => $query->where('name', $permission->value))
             ->pluck('id');
 
-        return $this->properties()
+        return array_values($this->properties()
             ->wherePivotIn('role_id', $roleIds)
             ->pluck('properties.id')
             ->map(fn (mixed $id): int => (int) $id)
-            ->all();
+            ->all());
     }
 
     /**
@@ -227,8 +253,8 @@ class User extends Authenticatable
     public function manageablePropertyIds(): array
     {
         if ($this->isSuperAdmin()) {
-            return Property::withoutGlobalScopes()->where('organization_id', $this->organization_id)->pluck('id')
-                ->map(fn (mixed $id): int => (int) $id)->all();
+            return array_values(Property::withoutGlobalScopes()->where('organization_id', $this->organization_id)->pluck('id')
+                ->map(fn (mixed $id): int => (int) $id)->all());
         }
 
         return $this->propertyIdsWithPermission(Permission::UsersManage);

@@ -36,7 +36,7 @@ class RoleController extends Controller
     {
         $this->authorizeSuperAdmin($request);
 
-        $organization = $request->user()->organization;
+        $organization = $this->organization($request);
         $roles = $this->rolesQuery($request)->with('permissions')->get();
         $counts = $this->userCounts($request, $roles);
 
@@ -69,14 +69,14 @@ class RoleController extends Controller
             $role = Role::create([
                 'name' => 'custom-'.Str::lower((string) Str::ulid()),
                 'guard_name' => 'web',
-                'organization_id' => $request->user()->organization_id,
+                'organization_id' => $this->actor($request)->organization_id,
                 'label' => $validated['label'],
                 'description' => $validated['description'] ?? null,
             ]);
             $role->syncPermissions($validated['permissions'] ?? []);
 
             if ($validated['requires_two_factor'] ?? false) {
-                $request->user()->organization->setTwoFactorRequired($role->name, true);
+                $this->organization($request)->setTwoFactorRequired($role->name, true);
             }
 
             Audit::security('role_created', "Created role {$role->displayLabel()}", $role, [
@@ -106,7 +106,7 @@ class RoleController extends Controller
             : $this->validateRole($request, $model);
 
         DB::transaction(function () use ($request, $model, $validated): void {
-            $organization = $request->user()->organization;
+            $organization = $this->organization($request);
             $before = [
                 'label' => $model->displayLabel(),
                 'description' => $model->description,
@@ -168,7 +168,7 @@ class RoleController extends Controller
                 'permissions' => $model->permissions()->pluck('name')->sort()->values()->all(),
             ]);
 
-            $request->user()->organization->setTwoFactorRequired($model->name, false);
+            $this->organization($request)->setTwoFactorRequired($model->name, false);
             $model->delete();
         });
 
@@ -177,7 +177,7 @@ class RoleController extends Controller
 
     private function authorizeSuperAdmin(Request $request): void
     {
-        abort_unless($request->user()->isSuperAdmin(), 403, 'Only Super Admins can manage roles.');
+        abort_unless($this->actor($request)->isSuperAdmin(), 403, 'Only Super Admins can manage roles.');
     }
 
     /**
@@ -185,7 +185,7 @@ class RoleController extends Controller
      */
     private function rolesQuery(Request $request)
     {
-        return Role::query()->visibleTo((int) $request->user()->organization_id);
+        return Role::query()->visibleTo((int) $this->actor($request)->organization_id);
     }
 
     private function find(Request $request, string $name): Role
@@ -199,7 +199,7 @@ class RoleController extends Controller
     private function validateRole(Request $request, ?Role $role = null): array
     {
         $required = $role ? 'sometimes' : 'required';
-        $organizationId = $request->user()->organization_id;
+        $organizationId = $this->actor($request)->organization_id;
         $systemLabels = array_map(fn (RoleEnum $role): string => $role->label(), RoleEnum::cases());
 
         return $request->validate([
@@ -225,7 +225,7 @@ class RoleController extends Controller
      */
     private function userCounts(Request $request, Collection $roles): array
     {
-        $organizationId = $request->user()->organization_id;
+        $organizationId = $this->actor($request)->organization_id;
 
         $counts = DB::table('property_user')
             ->join('users', 'users.id', '=', 'property_user.user_id')
@@ -265,7 +265,7 @@ class RoleController extends Controller
 
     private function roleResponse(Request $request, Role $role): JsonResponse
     {
-        $organization = $request->user()->organization;
+        $organization = $this->organization($request);
         $count = $this->userCounts($request, collect([$role]))[$role->id] ?? 0;
 
         return Bff::respond(

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Inventory\Models;
 
+use App\Support\Database\HasRecordStamps;
 use App\Support\Tenancy\BelongsToProperty;
 use Database\Factories\RoomTypeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +21,22 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * A sellable category of rooms at a property (SYS-04).
+ *
+ * @property int $id
+ * @property string $public_id
+ * @property int $organization_id
+ * @property int $property_id
+ * @property string $name
+ * @property string $code
+ * @property string|null $description
+ * @property int $base_occupancy
+ * @property int $max_adults
+ * @property int $max_children
+ * @property int $max_occupancy
+ * @property array<int, array{type: string, count: int}> $bed_configuration
+ * @property int $sort_order
+ * @property bool $is_active
+ * @property-read Collection<int, Amenity> $amenities
  */
 #[Fillable([
     'organization_id', 'property_id', 'name', 'code', 'description', 'base_occupancy', 'max_adults',
@@ -28,7 +46,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class RoomType extends Model
 {
     /** @use HasFactory<RoomTypeFactory> */
-    use BelongsToProperty, HasFactory, HasUlids, LogsActivity, SoftDeletes;
+    use BelongsToProperty, HasFactory, HasRecordStamps, HasUlids, LogsActivity, SoftDeletes;
 
     /**
      * @var array<string, mixed>

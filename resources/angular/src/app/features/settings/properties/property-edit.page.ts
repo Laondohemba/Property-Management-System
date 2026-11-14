@@ -6,6 +6,8 @@ import { SessionStore } from '../../../core/auth/session.store';
 import { applyProblemToForm, toProblem } from '../../../core/bff/problem';
 import { Property, PropertyInput } from '../../../core/bff/types';
 import { FieldError } from '../../../shared/ui/field-error';
+import { RecordStampsLine } from '../../../shared/ui/record-stamps';
+import { RecordHistory } from '../../audit/record-history';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { PropertiesApi } from './properties.api';
 
@@ -21,7 +23,7 @@ function supported(key: 'timeZone' | 'currency', fallback: string[]): string[] {
 @Component({
   selector: 'pms-property-edit-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError],
+  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError, RecordStampsLine, RecordHistory],
   templateUrl: './property-edit.page.html',
 })
 export class PropertyEditPage implements OnInit {

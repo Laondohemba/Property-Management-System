@@ -7,6 +7,7 @@ namespace App\Modules\Inventory\DTOs;
 use App\Modules\Inventory\Enums\BedType;
 use App\Modules\Inventory\Models\Amenity;
 use App\Modules\Inventory\Models\RoomType;
+use App\Support\Http\DTOs\RecordStampsData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 
@@ -33,6 +34,7 @@ class RoomTypeData extends Data
         public int|Optional $rooms_count,
         public int $sort_order,
         public bool $is_active,
+        public RecordStampsData $stamps,
     ) {}
 
     /**
@@ -60,6 +62,7 @@ class RoomTypeData extends Data
             rooms_count: $roomsCount === null ? Optional::create() : (int) $roomsCount,
             sort_order: $roomType->sort_order,
             is_active: $roomType->is_active,
+            stamps: RecordStampsData::fromModel($roomType),
         );
     }
 }

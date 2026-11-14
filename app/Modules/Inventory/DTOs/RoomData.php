@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Inventory\DTOs;
 
 use App\Modules\Inventory\Models\Room;
+use App\Support\Http\DTOs\RecordStampsData;
 use Spatie\LaravelData\Data;
 
 /**
@@ -22,6 +23,7 @@ class RoomData extends Data
         public OccupancyStatusData $occupancy_status,
         public int $sort_order,
         public bool $is_active,
+        public RecordStampsData $stamps,
     ) {}
 
     /**
@@ -39,6 +41,7 @@ class RoomData extends Data
             occupancy_status: OccupancyStatusData::fromEnum($room->occupancy_status),
             sort_order: $room->sort_order,
             is_active: $room->is_active,
+            stamps: RecordStampsData::fromModel($room),
         );
     }
 }

@@ -5,13 +5,14 @@ import { SessionStore } from '../../../core/auth/session.store';
 import { toProblem } from '../../../core/bff/problem';
 import { RoomType } from '../../../core/bff/types';
 import { PageTitle } from '../../../shared/ui/page-title';
+import { RecordStampsLine } from '../../../shared/ui/record-stamps';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { InventoryApi } from './inventory.api';
 
 @Component({
   selector: 'pms-room-type-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, PageTitle, StatusBadge],
+  imports: [RouterLink, PageTitle, StatusBadge, RecordStampsLine],
   template: `
     <pms-page-title title="Room Types" [breadcrumbs]="[{ label: 'Settings' }, { label: 'Room Types' }]" />
 
@@ -36,6 +37,7 @@ import { InventoryApi } from './inventory.api';
               <th scope="col" class="px-3 py-2 font-semibold">Occupancy</th>
               <th scope="col" class="px-3 py-2 font-semibold">Beds</th>
               <th scope="col" class="px-3 py-2 font-semibold">Rooms</th>
+              <th scope="col" class="px-3 py-2 font-semibold">Last updated</th>
               <th scope="col" class="px-3 py-2 font-semibold">Status</th>
               <th scope="col" class="px-3 py-2"><span class="sr-only">Actions</span></th>
             </tr>
@@ -56,6 +58,7 @@ import { InventoryApi } from './inventory.api';
                 </td>
                 <td class="px-3 py-3">{{ beds(type) }}</td>
                 <td class="px-3 py-3">{{ type.rooms_count ?? 0 }}</td>
+                <td class="px-3 py-3"><pms-record-stamps [stamps]="type.stamps" [compact]="true" /></td>
                 <td class="px-3 py-3">
                   <pms-status-badge [value]="type.is_active ? 'active' : 'inactive'" [label]="type.is_active ? 'Active' : 'Inactive'" />
                 </td>
@@ -65,7 +68,7 @@ import { InventoryApi } from './inventory.api';
               </tr>
             } @empty {
               <tr>
-                <td colspan="7" class="px-3 py-8 text-center text-muted">
+                <td colspan="8" class="px-3 py-8 text-center text-muted">
                   {{ loading() ? 'Loading…' : 'No room types yet. Add one to start setting up rooms.' }}
                 </td>
               </tr>

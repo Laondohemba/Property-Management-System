@@ -83,7 +83,11 @@ export class RoleEditPage implements OnInit {
   protected toggle(permission: Permission, checked: boolean): void {
     this.selected.update((current) => {
       const next = new Set(current);
-      checked ? next.add(permission) : next.delete(permission);
+      if (checked) {
+        next.add(permission);
+      } else {
+        next.delete(permission);
+      }
       return next;
     });
   }
