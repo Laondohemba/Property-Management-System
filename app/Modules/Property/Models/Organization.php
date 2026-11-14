@@ -57,6 +57,14 @@ class Organization extends Model
     }
 
     /**
+     * @return HasMany<Property, $this>
+     */
+    public function properties(): HasMany
+    {
+        return $this->hasMany(Property::class);
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

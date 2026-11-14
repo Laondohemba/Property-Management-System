@@ -1,0 +1,55 @@
+<pms-page-title title="Dashboard" [breadcrumbs]="[{ label: 'Dashboard' }]" />
+
+@if (error(); as message) {
+  <div class="pms-alert-danger mb-5" role="alert">{{ message }}</div>
+}
+
+@if (!session.activeProperty()) {
+  <section class="pms-card">
+    <h2 class="pms-card-title">Welcome, {{ session.user()?.name }}</h2>
+    @if (session.isSuperAdmin()) {
+      <p class="text-sm">Your organisation has no active properties yet. Add your first property to get started.</p>
+      <a routerLink="/settings/properties/new" class="pms-btn-primary mt-4">Add property</a>
+    } @else {
+      <p class="text-sm">You are not assigned to a property yet. Ask your administrator to give you access.</p>
+    }
+  </section>
+} @else if (!canView()) {
+  <section class="pms-card">
+    <h2 class="pms-card-title">{{ session.activeProperty()?.name }}</h2>
+    <p class="text-sm">Your role at this property doesn't include the dashboard. Use the menu to open your work areas.</p>
+  </section>
+} @else {
+  @if (data(); as dashboard) {
+    <div class="grid gap-x-[30px] sm:grid-cols-2 xl:grid-cols-4">
+      <section class="pms-card">
+        <h2 class="pms-card-title">Business date <span class="text-sm font-normal text-muted">| {{ dashboard.property.code }}</span></h2>
+        <p class="flex items-center gap-3 pb-1">
+          <span class="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary"><pms-icon name="clock" size="size-7" /></span>
+          <span class="whitespace-nowrap font-heading text-xl font-bold text-navy">{{ dashboard.property.business_date }}</span>
+        </p>
+      </section>
+      <section class="pms-card">
+        <h2 class="pms-card-title">Timezone</h2>
+        <p class="font-heading text-xl font-bold text-navy">{{ dashboard.property.timezone }}</p>
+      </section>
+      <section class="pms-card">
+        <h2 class="pms-card-title">Currency</h2>
+        <p class="font-heading text-xl font-bold text-navy">{{ dashboard.property.currency }}</p>
+      </section>
+      <section class="pms-card">
+        <h2 class="pms-card-title">Check-in / out</h2>
+        <p class="font-heading text-xl font-bold text-navy">{{ dashboard.property.check_in_time }} – {{ dashboard.property.check_out_time }}</p>
+      </section>
+    </div>
+
+    <section class="pms-card">
+      <h2 class="pms-card-title">Welcome back, {{ session.user()?.name }} <span class="text-sm font-normal text-muted">| {{ dashboard.property.name }}</span></h2>
+      <p class="text-sm">
+        KPI tiles, arrivals and departures, occupancy and alerts will appear here once reservations and inventory are delivered (Phase 1).
+      </p>
+    </section>
+  } @else if (!error()) {
+    <p class="text-sm text-muted">Loading dashboard…</p>
+  }
+}

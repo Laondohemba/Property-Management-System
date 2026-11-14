@@ -29,6 +29,18 @@ export const guestGuard: CanActivateFn = async () => {
   return session.isAuthenticated() ? router.createUrlTree(['/dashboard']) : true;
 };
 
+/**
+ * Hide screens the user cannot use. The server still enforces every permission;
+ * this only avoids showing pages that would answer 403.
+ */
+export function permissionGuard(check: (session: InstanceType<typeof SessionStore>) => boolean): CanActivateFn {
+  return () => {
+    const session = inject(SessionStore);
+
+    return check(session) ? true : inject(Router).createUrlTree(['/dashboard']);
+  };
+}
+
 /** Accept only same-app paths as post-login destinations (prevents open redirects). */
 export function safeReturnUrl(url: string | null | undefined): string {
   return url && url.startsWith('/') && !url.startsWith('//') ? url : '/dashboard';

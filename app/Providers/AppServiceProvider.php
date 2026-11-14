@@ -2,8 +2,9 @@
 
 namespace App\Providers;
 
-use App\Modules\Identity\Enums\Role;
+use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Models\User;
+use App\Support\PropertyContext;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One property context per request; reset between requests (stateless pods, spec ARC-08).
+        $this->app->scoped(PropertyContext::class);
     }
 
     /**
@@ -39,8 +41,22 @@ class AppServiceProvider extends ServiceProvider
             return $this->app->environment('local', 'testing') ? $rule : $rule->uncompromised();
         });
 
-        // Super Admins pass every authorisation check.
-        Gate::before(fn (User $user): ?bool => $user->hasRole(Role::SuperAdmin->value) ? true : null);
+        // Deny by default; permissions are checked against the role held at the active property (spec §13).
+        Gate::before(function (User $user, string $ability): ?bool {
+            if ($user->isSuperAdmin()) {
+                return true;
+            }
+
+            $permission = Permission::tryFrom($ability);
+
+            if ($permission === null) {
+                return null; // Not a permission name: let the policy decide.
+            }
+
+            $property = $this->app->make(PropertyContext::class)->property();
+
+            return $property !== null && $user->hasPropertyPermission($property, $permission);
+        });
 
         // Default BFF limit: 120 requests/minute per user, or per IP for guests (spec §8.1).
         RateLimiter::for('bff', fn (Request $request) => Limit::perMinute(120)

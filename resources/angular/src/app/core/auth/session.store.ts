@@ -11,9 +11,32 @@ export type SessionStatus = 'unknown' | 'authenticated' | 'guest';
 interface SessionState {
   session: SessionData | null;
   status: SessionStatus;
+  /** The property the user picked; sent as X-Property-Id (spec §2.7). */
+  selectedPropertyId: string | null;
 }
 
-const initialState: SessionState = { session: null, status: 'unknown' };
+/** Remembering the selected property is a UI convenience, not a credential. */
+const SELECTED_PROPERTY_KEY = 'pms.activeProperty';
+
+function readSelectedProperty(): string | null {
+  try {
+    return localStorage.getItem(SELECTED_PROPERTY_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSelectedProperty(id: string | null): void {
+  try {
+    if (id) {
+      localStorage.setItem(SELECTED_PROPERTY_KEY, id);
+    } else {
+      localStorage.removeItem(SELECTED_PROPERTY_KEY);
+    }
+  } catch {
+    // Storage unavailable (private mode): selection simply isn't remembered.
+  }
+}
 
 /**
  * The signed-in user's session, loaded from GET /bff/session (spec §8.2).
@@ -21,13 +44,18 @@ const initialState: SessionState = { session: null, status: 'unknown' };
  */
 export const SessionStore = signalStore(
   { providedIn: 'root' },
-  withState(initialState),
-  withComputed(({ session, status }) => ({
+  withState<SessionState>(() => ({ session: null, status: 'unknown', selectedPropertyId: readSelectedProperty() })),
+  withComputed(({ session, status, selectedPropertyId }) => ({
     user: computed(() => session()?.user ?? null),
     organization: computed(() => session()?.organization ?? null),
-    primaryRole: computed(() => session()?.roles[0] ?? null),
-    activePropertyId: computed(() => session()?.active_property?.id ?? null),
     isAuthenticated: computed(() => status() === 'authenticated'),
+    isSuperAdmin: computed(() => session()?.is_super_admin ?? false),
+    properties: computed(() => session()?.properties ?? []),
+    activeProperty: computed(() => session()?.active_property ?? null),
+    activePropertyId: computed(() => session()?.active_property?.id ?? selectedPropertyId()),
+    /** Role at the active property (or the organisation-wide role for Super Admins). */
+    primaryRole: computed(() => session()?.active_property?.role ?? session()?.roles[0] ?? null),
+    permissions: computed(() => new Set(session()?.permissions ?? [])),
   })),
   withMethods((store, http = inject(HttpClient)) => {
     let pending: Promise<boolean> | null = null;
@@ -37,7 +65,9 @@ export const SessionStore = signalStore(
         const response = await firstValueFrom(
           http.get<BffEnvelope<SessionData, SessionMeta>>('/bff/session', { context: skipAuthRedirect() }),
         );
-        patchState(store, { session: response.data, status: 'authenticated' });
+        const activeId = response.data.active_property?.id ?? null;
+        writeSelectedProperty(activeId);
+        patchState(store, { session: response.data, status: 'authenticated', selectedPropertyId: activeId });
 
         return true;
       } catch {
@@ -53,6 +83,21 @@ export const SessionStore = signalStore(
         pending ??= fetchSession().finally(() => (pending = null));
 
         return pending;
+      },
+
+      /** Switch the active property and reload permissions for it. */
+      async selectProperty(id: string): Promise<boolean> {
+        writeSelectedProperty(id);
+        patchState(store, {
+          selectedPropertyId: id,
+          session: store.session() ? { ...store.session()!, active_property: null } : null,
+        });
+
+        return this.load();
+      },
+
+      can(permission: string): boolean {
+        return store.permissions().has(permission);
       },
 
       clear(): void {

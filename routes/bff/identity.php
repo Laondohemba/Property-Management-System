@@ -7,6 +7,6 @@ use Illuminate\Support\Facades\Route;
 | Identity BFF routes. Prefix /bff and the "bff" middleware group are applied in bootstrap/app.php.
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'property:default'])->group(function () {
     Route::get('session', SessionController::class)->name('session');
 });

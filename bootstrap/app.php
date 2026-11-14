@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AddAppVersionHeader;
 use App\Modules\Identity\Http\Middleware\EnsureAccountIsActive;
+use App\Modules\Property\Http\Middleware\ResolvePropertyContext;
 use App\Support\Http\Problem;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -45,6 +46,9 @@ return Application::configure(basePath: dirname(__DIR__))
             SubstituteBindings::class,
             EnsureAccountIsActive::class,
         ]);
+
+        // X-Property-Id validation (spec §2.7): property | property:optional | property:default.
+        $middleware->alias(['property' => ResolvePropertyContext::class]);
 
         // The SPA owns the sign-in page; unauthenticated JSON requests receive 401.
         $middleware->redirectGuestsTo('/login');

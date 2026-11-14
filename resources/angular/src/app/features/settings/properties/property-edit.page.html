@@ -1,0 +1,134 @@
+<pms-page-title
+  [title]="isNew() ? 'New Property' : (property()?.name ?? 'Edit Property')"
+  [breadcrumbs]="[{ label: 'Settings' }, { label: 'Properties', link: '/settings/properties' }, { label: isNew() ? 'New' : 'Edit' }]" />
+
+@if (error(); as message) {
+  <div class="pms-alert-danger mb-5" role="alert">{{ message }}</div>
+}
+@if (saved()) {
+  <div class="pms-alert-success mb-5" role="status">Property saved.</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="grid gap-x-[30px] xl:grid-cols-2">
+    <section class="pms-card">
+      <h2 class="pms-card-title">Details</h2>
+
+      <div class="grid gap-4 sm:grid-cols-[2fr_1fr]">
+        <div>
+          <label for="name" class="pms-label">Property name</label>
+          <input id="name" type="text" formControlName="name" class="pms-input" />
+          <pms-field-error [control]="form.controls.name" />
+        </div>
+        <div>
+          <label for="code" class="pms-label">Code</label>
+          <input id="code" type="text" formControlName="code" class="pms-input uppercase" aria-describedby="code_help" />
+          <p id="code_help" class="mt-1 text-xs text-muted">Short unique code, e.g. LOS1.</p>
+          <pms-field-error [control]="form.controls.code" />
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="timezone" class="pms-label">Timezone</label>
+          <select id="timezone" formControlName="timezone" class="pms-input">
+            @for (zone of timezones; track zone) {
+              <option [value]="zone">{{ zone }}</option>
+            }
+          </select>
+          <pms-field-error [control]="form.controls.timezone" />
+        </div>
+        <div>
+          <label for="currency" class="pms-label">Base currency</label>
+          <select id="currency" formControlName="currency" class="pms-input">
+            @for (currency of currencies; track currency) {
+              <option [value]="currency">{{ currency }}</option>
+            }
+          </select>
+          <pms-field-error [control]="form.controls.currency" />
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="check_in_time" class="pms-label">Standard check-in time</label>
+          <input id="check_in_time" type="time" formControlName="check_in_time" class="pms-input" />
+          <pms-field-error [control]="form.controls.check_in_time" />
+        </div>
+        <div>
+          <label for="check_out_time" class="pms-label">Standard check-out time</label>
+          <input id="check_out_time" type="time" formControlName="check_out_time" class="pms-input" />
+          <pms-field-error [control]="form.controls.check_out_time" />
+        </div>
+      </div>
+
+      @if (property(); as current) {
+        <p class="mt-4 text-sm text-muted">
+          Business date: <strong class="text-navy">{{ current.business_date }}</strong>. It advances at night audit and can't be edited here.
+        </p>
+      }
+
+      <label for="is_active" class="mt-4 flex items-center gap-2">
+        <input id="is_active" type="checkbox" formControlName="is_active" class="pms-checkbox" />
+        <span class="text-sm">Active (staff can select and work in this property)</span>
+      </label>
+    </section>
+
+    <section class="pms-card">
+      <h2 class="pms-card-title">Contact &amp; address</h2>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="email" class="pms-label">Email</label>
+          <input id="email" type="email" formControlName="email" class="pms-input" />
+          <pms-field-error [control]="form.controls.email" />
+        </div>
+        <div>
+          <label for="phone" class="pms-label">Phone</label>
+          <input id="phone" type="tel" formControlName="phone" class="pms-input" />
+          <pms-field-error [control]="form.controls.phone" />
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label for="address_line1" class="pms-label">Address line 1</label>
+        <input id="address_line1" type="text" formControlName="address_line1" class="pms-input" />
+        <pms-field-error [control]="form.controls.address_line1" />
+      </div>
+      <div class="mt-4">
+        <label for="address_line2" class="pms-label">Address line 2</label>
+        <input id="address_line2" type="text" formControlName="address_line2" class="pms-input" />
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="city" class="pms-label">City</label>
+          <input id="city" type="text" formControlName="city" class="pms-input" />
+        </div>
+        <div>
+          <label for="state" class="pms-label">State / region</label>
+          <input id="state" type="text" formControlName="state" class="pms-input" />
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="postal_code" class="pms-label">Postal code</label>
+          <input id="postal_code" type="text" formControlName="postal_code" class="pms-input" />
+        </div>
+        <div>
+          <label for="country" class="pms-label">Country (ISO code)</label>
+          <input id="country" type="text" maxlength="2" formControlName="country" placeholder="NG" class="pms-input uppercase" />
+          <pms-field-error [control]="form.controls.country" />
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="submit" class="pms-btn-primary" [disabled]="saving() || loading()">
+      {{ saving() ? 'Saving…' : isNew() ? 'Create Property' : 'Save Changes' }}
+    </button>
+    <a routerLink="/settings/properties" class="pms-btn-secondary">Back to list</a>
+  </div>
+</form>

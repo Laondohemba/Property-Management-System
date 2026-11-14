@@ -36,10 +36,20 @@ export class Shell {
   private readonly authApi = inject(AuthApi);
   private readonly router = inject(Router);
 
-  protected readonly nav: NavSection[] = [
-    { items: [{ label: 'Dashboard', icon: 'grid', link: '/dashboard' }] },
-    { heading: 'Account', items: [{ label: 'Profile', icon: 'user', link: '/account/profile' }] },
-  ];
+  /** Navigation filtered by what the user may do at the active property (server still enforces). */
+  protected readonly nav = computed<NavSection[]>(() => {
+    const settings: NavItem[] = [];
+
+    if (this.session.isSuperAdmin() || this.session.permissions().has('settings.property')) {
+      settings.push({ label: 'Properties', icon: 'building', link: '/settings/properties' });
+    }
+
+    return [
+      { items: [{ label: 'Dashboard', icon: 'grid', link: '/dashboard' }] },
+      ...(settings.length ? [{ heading: 'Settings', items: settings }] : []),
+      { heading: 'Account', items: [{ label: 'Profile', icon: 'user', link: '/account/profile' }] },
+    ];
+  });
 
   protected readonly desktop = toSignal(
     inject(BreakpointObserver)
@@ -80,6 +90,15 @@ export class Shell {
 
   protected reload(): void {
     window.location.reload();
+  }
+
+  protected async switchProperty(id: string): Promise<void> {
+    if (id === this.session.activeProperty()?.id) {
+      return;
+    }
+
+    await this.session.selectProperty(id);
+    await this.router.navigateByUrl('/dashboard');
   }
 
   private leave(): void {
