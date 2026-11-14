@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
     {
         // One property context per request; reset between requests (stateless pods, spec ARC-08).
         $this->app->scoped(PropertyContext::class);
+
+        // TypeScript generation for the SPA contract (ARC-11) is a dev-only tool.
+        if (class_exists(TypeScriptTransformerApplicationServiceProvider::class)) {
+            $this->app->register(TypeScriptTransformerServiceProvider::class);
+        }
     }
 
     /**

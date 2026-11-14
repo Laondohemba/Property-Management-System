@@ -8,10 +8,13 @@ use App\Http\Controllers\Controller;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Inventory\Actions\CreateRoomRange;
 use App\Modules\Inventory\Actions\SaveRoom;
+use App\Modules\Inventory\DTOs\RoomData;
+use App\Modules\Inventory\DTOs\RoomListMetaData;
+use App\Modules\Inventory\DTOs\RoomRangeMetaData;
 use App\Modules\Inventory\Http\Requests\RoomRangeRequest;
 use App\Modules\Inventory\Http\Requests\RoomRequest;
-use App\Modules\Inventory\Http\Resources\RoomResource;
 use App\Modules\Inventory\Models\Room;
+use App\Support\Http\Bff;
 use App\Support\Http\Paginated;
 use App\Support\PropertyContext;
 use Illuminate\Database\Eloquent\Builder;
@@ -53,16 +56,19 @@ class RoomController extends Controller implements HasMiddleware
             ->paginate(Paginated::perPage($request));
 
         // Filter options shown by the rooms screen (view-shaped, spec §8.1).
-        $floors = Room::forProperty($property)->whereNotNull('floor')->distinct()->orderByRaw('LENGTH(floor), floor')->pluck('floor');
+        $floors = Room::forProperty($property)->whereNotNull('floor')->distinct()->orderByRaw('LENGTH(floor), floor')->pluck('floor')->all();
 
-        return Paginated::response($rooms, RoomResource::class, $request, ['floors' => $floors]);
+        return Bff::respond(
+            $rooms->getCollection()->map(fn (Room $room): RoomData => RoomData::fromModel($room))->all(),
+            RoomListMetaData::make($rooms, $floors),
+        );
     }
 
     public function store(RoomRequest $request, SaveRoom $save): JsonResponse
     {
         $room = $save->handle($request->user(), $this->context->require(), $request->validated());
 
-        return (new RoomResource($room))->response()->setStatusCode(201);
+        return Bff::respond(RoomData::fromModel($room), status: 201);
     }
 
     /**
@@ -78,20 +84,26 @@ class RoomController extends Controller implements HasMiddleware
             $request->validated('floor'),
         );
 
-        return new JsonResponse(['data' => RoomResource::collection($rooms)->resolve($request), 'meta' => ['created' => $rooms->count()]], 201);
+        return Bff::respond(
+            $rooms->map(fn (Room $room): RoomData => RoomData::fromModel($room))->all(),
+            new RoomRangeMetaData($rooms->count()),
+            201,
+        );
     }
 
-    public function show(Room $room): RoomResource
+    public function show(Room $room): JsonResponse
     {
         $this->context->ensureOwns($room);
 
-        return new RoomResource($room->load('roomType'));
+        return Bff::respond(RoomData::fromModel($room->load('roomType')));
     }
 
-    public function update(RoomRequest $request, Room $room, SaveRoom $save): RoomResource
+    public function update(RoomRequest $request, Room $room, SaveRoom $save): JsonResponse
     {
         $this->context->ensureOwns($room);
 
-        return new RoomResource($save->handle($request->user(), $this->context->require(), $request->validated(), $room));
+        return Bff::respond(RoomData::fromModel(
+            $save->handle($request->user(), $this->context->require(), $request->validated(), $room),
+        ));
     }
 }

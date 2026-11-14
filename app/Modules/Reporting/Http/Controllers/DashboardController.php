@@ -7,6 +7,10 @@ namespace App\Modules\Reporting\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Inventory\Actions\SummarizeInventory;
+use App\Modules\Reporting\DTOs\DashboardData;
+use App\Modules\Reporting\DTOs\DashboardPropertyData;
+use App\Modules\Reporting\DTOs\DashboardTileData;
+use App\Support\Http\Bff;
 use App\Support\PropertyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
@@ -24,25 +28,23 @@ class DashboardController extends Controller
         $property = $context->require();
         $counts = $inventory->handle($property);
 
-        return new JsonResponse([
-            'data' => [
-                'property' => [
-                    'id' => $property->public_id,
-                    'name' => $property->name,
-                    'code' => $property->code,
-                    'timezone' => $property->timezone,
-                    'currency' => $property->currency,
-                    'business_date' => $property->business_date?->toDateString(),
-                    'check_in_time' => substr((string) $property->check_in_time, 0, 5),
-                    'check_out_time' => substr((string) $property->check_out_time, 0, 5),
-                    'local_time' => now($property->timezone)->toIso8601String(),
-                ],
-                'tiles' => [
-                    ['key' => 'rooms', 'label' => 'Active rooms', 'value' => $counts['rooms']],
-                    ['key' => 'room_types', 'label' => 'Room types', 'value' => $counts['room_types']],
-                ],
-                'alerts' => [],
+        return Bff::respond(new DashboardData(
+            property: new DashboardPropertyData(
+                id: $property->public_id,
+                name: $property->name,
+                code: $property->code,
+                timezone: $property->timezone,
+                currency: $property->currency,
+                business_date: (string) $property->business_date?->toDateString(),
+                check_in_time: substr((string) $property->check_in_time, 0, 5),
+                check_out_time: substr((string) $property->check_out_time, 0, 5),
+                local_time: now($property->timezone)->toIso8601String(),
+            ),
+            tiles: [
+                new DashboardTileData('rooms', 'Active rooms', $counts['rooms']),
+                new DashboardTileData('room_types', 'Room types', $counts['room_types']),
             ],
-        ]);
+            alerts: [],
+        ));
     }
 }

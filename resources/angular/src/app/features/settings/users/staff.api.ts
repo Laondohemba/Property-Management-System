@@ -2,7 +2,17 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
-import { BffEnvelope, PageMeta, PermissionGroup, RoleDetail, StaffOptions, StaffStatus, StaffUser } from '../../../core/bff/types';
+import {
+  BffEnvelope,
+  PermissionGroup,
+  RoleDetail,
+  RoleInput,
+  StaffListMetaData,
+  StaffOptions,
+  StaffResponseMetaData,
+  StaffStatus,
+  StaffUser,
+} from '../../../core/bff/types';
 
 export interface StaffFilters {
   page?: number;
@@ -22,7 +32,7 @@ export interface StaffResult {
 export class StaffApi {
   private readonly http = inject(HttpClient);
 
-  list(filters: StaffFilters = {}): Observable<{ items: StaffUser[]; meta: PageMeta & StaffOptions }> {
+  list(filters: StaffFilters = {}): Observable<{ items: StaffUser[]; meta: StaffListMetaData }> {
     let params = new HttpParams().set('page', filters.page ?? 1).set('per_page', 25);
 
     if (filters.search) params = params.set('filter[search]', filters.search);
@@ -30,28 +40,28 @@ export class StaffApi {
     if (filters.status) params = params.set('filter[status]', filters.status);
 
     return this.http
-      .get<BffEnvelope<StaffUser[], PageMeta & StaffOptions>>('/bff/users', { params })
+      .get<BffEnvelope<StaffUser[], StaffListMetaData>>('/bff/users', { params })
       .pipe(map((response) => ({ items: response.data, meta: response.meta! })));
   }
 
   get(id: string): Observable<StaffResult> {
-    return this.http.get<BffEnvelope<StaffUser, StaffOptions>>(`/bff/users/${id}`).pipe(map(toResult));
+    return this.http.get<BffEnvelope<StaffUser, StaffResponseMetaData>>(`/bff/users/${id}`).pipe(map(toResult));
   }
 
   invite(input: { name: string; email: string; property_id: string; role: string }): Observable<StaffResult> {
-    return this.http.post<BffEnvelope<StaffUser, StaffOptions & { invited: boolean }>>('/bff/users', input).pipe(map(toResult));
+    return this.http.post<BffEnvelope<StaffUser, StaffResponseMetaData>>('/bff/users', input).pipe(map(toResult));
   }
 
   updateAccount(id: string, input: { name?: string; is_active?: boolean; is_super_admin?: boolean }): Observable<StaffResult> {
-    return this.http.patch<BffEnvelope<StaffUser, StaffOptions>>(`/bff/users/${id}`, input).pipe(map(toResult));
+    return this.http.patch<BffEnvelope<StaffUser, StaffResponseMetaData>>(`/bff/users/${id}`, input).pipe(map(toResult));
   }
 
   assign(id: string, propertyId: string, role: string): Observable<StaffResult> {
-    return this.http.put<BffEnvelope<StaffUser, StaffOptions>>(`/bff/users/${id}/properties/${propertyId}`, { role }).pipe(map(toResult));
+    return this.http.put<BffEnvelope<StaffUser, StaffResponseMetaData>>(`/bff/users/${id}/properties/${propertyId}`, { role }).pipe(map(toResult));
   }
 
   unassign(id: string, propertyId: string): Observable<StaffResult> {
-    return this.http.delete<BffEnvelope<StaffUser, StaffOptions>>(`/bff/users/${id}/properties/${propertyId}`).pipe(map(toResult));
+    return this.http.delete<BffEnvelope<StaffUser, StaffResponseMetaData>>(`/bff/users/${id}/properties/${propertyId}`).pipe(map(toResult));
   }
 
   resendInvitation(id: string): Observable<void> {
@@ -72,11 +82,11 @@ export class StaffApi {
       .pipe(map((response) => ({ role: response.data, groups: response.meta!.permission_groups })));
   }
 
-  createRole(input: { label: string; description: string | null; permissions: string[]; requires_two_factor: boolean }): Observable<RoleDetail> {
+  createRole(input: RoleInput): Observable<RoleDetail> {
     return this.http.post<BffEnvelope<RoleDetail>>('/bff/roles', input).pipe(map((response) => response.data));
   }
 
-  updateRole(name: string, input: Partial<{ label: string; description: string | null; permissions: string[]; requires_two_factor: boolean }>): Observable<RoleDetail> {
+  updateRole(name: string, input: Partial<RoleInput>): Observable<RoleDetail> {
     return this.http.patch<BffEnvelope<RoleDetail>>(`/bff/roles/${name}`, input).pipe(map((response) => response.data));
   }
 
@@ -85,7 +95,7 @@ export class StaffApi {
   }
 }
 
-function toResult(response: BffEnvelope<StaffUser, StaffOptions & { invited?: boolean }>): StaffResult {
+function toResult(response: BffEnvelope<StaffUser, StaffResponseMetaData>): StaffResult {
   const { invited, ...options } = response.meta!;
 
   return { user: response.data, options, invited };

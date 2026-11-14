@@ -7,12 +7,16 @@ namespace App\Modules\Identity\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Actions\InviteUser;
 use App\Modules\Identity\Actions\SendInvitation;
+use App\Modules\Identity\DTOs\StaffListMetaData;
+use App\Modules\Identity\DTOs\StaffResponseMetaData;
+use App\Modules\Identity\DTOs\StaffUserData;
 use App\Modules\Identity\Enums\Role as RoleEnum;
 use App\Modules\Identity\Http\Presenters\StaffPresenter;
 use App\Modules\Identity\Http\Requests\InviteUserRequest;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\User;
 use App\Modules\Property\Models\Property;
+use App\Support\Http\Bff;
 use App\Support\Http\Paginated;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -52,16 +56,10 @@ class StaffController extends Controller
             ->orderBy('name')
             ->paginate(Paginated::perPage($request));
 
-        return new JsonResponse([
-            'data' => collect($users->items())->map(fn (User $user): array => $presenter->user($user))->all(),
-            'meta' => [
-                'page' => $users->currentPage(),
-                'per_page' => $users->perPage(),
-                'total' => $users->total(),
-                'last_page' => $users->lastPage(),
-                ...$presenter->options(),
-            ],
-        ]);
+        return Bff::respond(
+            $users->getCollection()->map(fn (User $user): StaffUserData => $presenter->user($user))->all(),
+            StaffListMetaData::make($users, $presenter->options()),
+        );
     }
 
     public function show(Request $request, User $user): JsonResponse
@@ -88,7 +86,7 @@ class StaffController extends Controller
             $request->role(),
         );
 
-        return $this->userResponse($request, $user, ['invited' => $invited])->setStatusCode(201);
+        return $this->userResponse($request, $user, $invited)->setStatusCode(201);
     }
 
     /**
@@ -194,13 +192,13 @@ class StaffController extends Controller
     }
 
     /**
-     * @param  array<string, mixed>  $meta
+     * @param  bool|null  $invited  after an invite: whether an e-mail was sent
      */
-    private function userResponse(Request $request, User $user, array $meta = []): JsonResponse
+    private function userResponse(Request $request, User $user, ?bool $invited = null): JsonResponse
     {
         $presenter = new StaffPresenter($request->user());
         $user->load(['properties', 'roles']);
 
-        return new JsonResponse(['data' => $presenter->user($user), 'meta' => [...$meta, ...$presenter->options()]]);
+        return Bff::respond($presenter->user($user), StaffResponseMetaData::make($presenter->options(), $invited));
     }
 }

@@ -5,16 +5,17 @@ import { Observable, map } from 'rxjs';
 import {
   Amenity,
   BffEnvelope,
-  Option,
-  PageMeta,
   Room,
   RoomInput,
+  RoomListMetaData,
   RoomRangeInput,
+  RoomRangeMetaData,
   RoomType,
   RoomTypeInput,
+  RoomTypeListMetaData,
 } from '../../../core/bff/types';
 
-export interface Page<T, M = PageMeta> {
+export interface Page<T, M> {
   items: T[];
   meta: M;
 }
@@ -58,7 +59,7 @@ export class InventoryApi {
 
   // Room types --------------------------------------------------------------
 
-  roomTypes(options: { page?: number; perPage?: number; active?: boolean } = {}): Observable<Page<RoomType, PageMeta & { bed_types: Option[] }>> {
+  roomTypes(options: { page?: number; perPage?: number; active?: boolean } = {}): Observable<Page<RoomType, RoomTypeListMetaData>> {
     let params = new HttpParams().set('page', options.page ?? 1).set('per_page', options.perPage ?? 100);
 
     if (options.active !== undefined) {
@@ -66,7 +67,7 @@ export class InventoryApi {
     }
 
     return this.http
-      .get<BffEnvelope<RoomType[], PageMeta & { bed_types: Option[] }>>(`${this.base}/room-types`, { params })
+      .get<BffEnvelope<RoomType[], RoomTypeListMetaData>>(`${this.base}/room-types`, { params })
       .pipe(map((response) => ({ items: response.data, meta: response.meta! })));
   }
 
@@ -84,7 +85,7 @@ export class InventoryApi {
 
   // Rooms -------------------------------------------------------------------
 
-  rooms(filters: RoomFilters = {}): Observable<Page<Room, PageMeta & { floors: string[] }>> {
+  rooms(filters: RoomFilters = {}): Observable<Page<Room, RoomListMetaData>> {
     let params = new HttpParams().set('page', filters.page ?? 1).set('per_page', 50);
 
     if (filters.roomType) params = params.set('filter[room_type]', filters.roomType);
@@ -93,7 +94,7 @@ export class InventoryApi {
     if (filters.active !== undefined) params = params.set('filter[active]', filters.active ? 1 : 0);
 
     return this.http
-      .get<BffEnvelope<Room[], PageMeta & { floors: string[] }>>(`${this.base}/rooms`, { params })
+      .get<BffEnvelope<Room[], RoomListMetaData>>(`${this.base}/rooms`, { params })
       .pipe(map((response) => ({ items: response.data, meta: response.meta! })));
   }
 
@@ -107,7 +108,7 @@ export class InventoryApi {
 
   createRoomRange(input: RoomRangeInput): Observable<number> {
     return this.http
-      .post<BffEnvelope<Room[], { created: number }>>(`${this.base}/rooms/range`, input)
+      .post<BffEnvelope<Room[], RoomRangeMetaData>>(`${this.base}/rooms/range`, input)
       .pipe(map((response) => response.meta!.created));
   }
 

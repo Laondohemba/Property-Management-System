@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace App\Support\Http;
 
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * BFF list responses in the { data, meta } envelope (spec §8.1).
+ * Pagination conventions for BFF lists (spec §8.1): page/per_page, default 25, max 100.
  */
 final class Paginated
 {
@@ -21,24 +18,5 @@ final class Paginated
     public static function perPage(Request $request): int
     {
         return max(1, min(self::MAX_PER_PAGE, $request->integer('per_page', self::DEFAULT_PER_PAGE)));
-    }
-
-    /**
-     * @param  LengthAwarePaginator<int, mixed>  $paginator
-     * @param  class-string<JsonResource>  $resource
-     * @param  array<string, mixed>  $meta  extra view data, e.g. filter options
-     */
-    public static function response(LengthAwarePaginator $paginator, string $resource, Request $request, array $meta = []): JsonResponse
-    {
-        return new JsonResponse([
-            'data' => $resource::collection($paginator->items())->resolve($request),
-            'meta' => [
-                'page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'last_page' => $paginator->lastPage(),
-                ...$meta,
-            ],
-        ]);
     }
 }

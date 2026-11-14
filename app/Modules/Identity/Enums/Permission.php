@@ -111,24 +111,6 @@ enum Permission: string
     }
 
     /**
-     * The permission catalogue grouped for the matrix editor.
-     *
-     * @return list<array{group: string, label: string, permissions: list<array{name: string, label: string}>}>
-     */
-    public static function catalogue(): array
-    {
-        $groups = [];
-
-        foreach (self::cases() as $permission) {
-            $groups[$permission->group()]['group'] = $permission->group();
-            $groups[$permission->group()]['label'] = self::groupLabel($permission->group());
-            $groups[$permission->group()]['permissions'][] = ['name' => $permission->value, 'label' => $permission->label()];
-        }
-
-        return array_values($groups);
-    }
-
-    /**
      * @return list<string>
      */
     public static function values(): array

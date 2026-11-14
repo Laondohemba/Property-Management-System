@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 
 import { applyProblemToForm, toProblem } from '../../../core/bff/problem';
-import { Amenity, Option, RoomType, RoomTypeInput } from '../../../core/bff/types';
+import { Amenity, BedTypeOptionData, RoomType, RoomTypeInput } from '../../../core/bff/types';
 import { FieldError } from '../../../shared/ui/field-error';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { InventoryApi } from './inventory.api';
@@ -26,7 +26,7 @@ export class RoomTypeEditPage implements OnInit {
   protected readonly isNew = computed(() => !this.id());
   protected readonly roomType = signal<RoomType | null>(null);
   protected readonly amenities = signal<Amenity[]>([]);
-  protected readonly bedTypes = signal<Option[]>([]);
+  protected readonly bedTypes = signal<BedTypeOptionData[]>([]);
   protected readonly selectedAmenities = signal<Set<string>>(new Set());
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);

@@ -7,10 +7,11 @@ namespace App\Modules\Inventory\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Inventory\Actions\SaveRoomType;
-use App\Modules\Inventory\Enums\BedType;
+use App\Modules\Inventory\DTOs\RoomTypeData;
+use App\Modules\Inventory\DTOs\RoomTypeListMetaData;
 use App\Modules\Inventory\Http\Requests\RoomTypeRequest;
-use App\Modules\Inventory\Http\Resources\RoomTypeResource;
 use App\Modules\Inventory\Models\RoomType;
+use App\Support\Http\Bff;
 use App\Support\Http\Paginated;
 use App\Support\PropertyContext;
 use Illuminate\Http\JsonResponse;
@@ -43,29 +44,32 @@ class RoomTypeController extends Controller implements HasMiddleware
             ->orderBy('name')
             ->paginate(Paginated::perPage($request));
 
-        return Paginated::response($roomTypes, RoomTypeResource::class, $request, [
-            'bed_types' => array_map(fn (BedType $type): array => ['value' => $type->value, 'label' => $type->label()], BedType::cases()),
-        ]);
+        return Bff::respond(
+            $roomTypes->getCollection()->map(fn (RoomType $roomType): RoomTypeData => RoomTypeData::fromModel($roomType))->all(),
+            RoomTypeListMetaData::make($roomTypes),
+        );
     }
 
     public function store(RoomTypeRequest $request, SaveRoomType $save): JsonResponse
     {
         $roomType = $save->handle($request->user(), $this->context->require(), $request->validated());
 
-        return (new RoomTypeResource($roomType))->response()->setStatusCode(201);
+        return Bff::respond(RoomTypeData::fromModel($roomType), status: 201);
     }
 
-    public function show(RoomType $roomType): RoomTypeResource
+    public function show(RoomType $roomType): JsonResponse
     {
         $this->context->ensureOwns($roomType);
 
-        return new RoomTypeResource($roomType->load('amenities')->loadCount('rooms'));
+        return Bff::respond(RoomTypeData::fromModel($roomType->load('amenities')->loadCount('rooms')));
     }
 
-    public function update(RoomTypeRequest $request, RoomType $roomType, SaveRoomType $save): RoomTypeResource
+    public function update(RoomTypeRequest $request, RoomType $roomType, SaveRoomType $save): JsonResponse
     {
         $this->context->ensureOwns($roomType);
 
-        return new RoomTypeResource($save->handle($request->user(), $this->context->require(), $request->validated(), $roomType));
+        return Bff::respond(RoomTypeData::fromModel(
+            $save->handle($request->user(), $this->context->require(), $request->validated(), $roomType),
+        ));
     }
 }

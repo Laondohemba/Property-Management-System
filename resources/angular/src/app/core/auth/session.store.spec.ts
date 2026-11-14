@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { SessionData, SessionProperty } from '../bff/types';
+import { Permission, SessionData, SessionProperty } from '../bff/types';
 import { bffInterceptor } from '../http/bff.interceptor';
 import { SessionStore } from './session.store';
 
@@ -18,7 +18,7 @@ const alpha: SessionProperty = {
 };
 const beta: SessionProperty = { ...alpha, id: '01JBETA', name: 'Beta Hotel', code: 'BET', role: { name: 'accountant', label: 'Accountant / Finance' } };
 
-function session(active: SessionProperty | null, permissions: string[] = ['dashboard.view']): SessionData {
+function session(active: SessionProperty | null, permissions: Permission[] = ['dashboard.view']): SessionData {
   return {
     user: { id: '01JTEST', name: 'Ada Admin', email: 'ada@example.com', two_factor_enabled: false, two_factor_required: false, last_login_at: null },
     organization: { id: '01JORG', name: 'Demo Hotels' },

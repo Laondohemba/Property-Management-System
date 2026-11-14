@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Identity\DTOs\PermissionGroupData;
+use App\Modules\Identity\DTOs\RoleData;
+use App\Modules\Identity\DTOs\RoleMetaData;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Enums\Role as RoleEnum;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\User;
+use App\Support\Http\Bff;
 use App\Support\Http\Problem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -35,13 +39,14 @@ class RoleController extends Controller
         $roles = $this->rolesQuery($request)->with('permissions')->get();
         $counts = $this->userCounts($request, $roles);
 
-        return new JsonResponse([
-            'data' => $roles
+        return Bff::respond(
+            $roles
                 ->sortBy(fn (Role $role): string => ($role->isSystem() ? '0'.str_pad((string) $role->id, 4, '0', STR_PAD_LEFT) : '1'.$role->displayLabel()))
-                ->map(fn (Role $role): array => $this->present($role, $organization->twoFactorRoles(), $counts[$role->id] ?? 0))
-                ->values(),
-            'meta' => ['permission_groups' => Permission::catalogue()],
-        ]);
+                ->map(fn (Role $role): RoleData => $this->present($role, $organization->twoFactorRoles(), $counts[$role->id] ?? 0))
+                ->values()
+                ->all(),
+            new RoleMetaData(PermissionGroupData::catalogue()),
+        );
     }
 
     public function show(Request $request, string $role): JsonResponse
@@ -206,20 +211,20 @@ class RoleController extends Controller
 
     /**
      * @param  list<string>  $twoFactorRoles
-     * @return array<string, mixed>
      */
-    private function present(Role $role, array $twoFactorRoles, int $usersCount): array
+    private function present(Role $role, array $twoFactorRoles, int $usersCount): RoleData
     {
-        return [
-            'name' => $role->name,
-            'label' => $role->displayLabel(),
-            'description' => $role->description,
-            'is_system' => $role->isSystem(),
-            'is_super_admin' => $role->name === RoleEnum::SuperAdmin->value,
-            'requires_two_factor' => in_array($role->name, $twoFactorRoles, true),
-            'permissions' => $role->permissions->pluck('name')->sort()->values()->all(),
-            'users_count' => $usersCount,
-        ];
+        return new RoleData(
+            name: $role->name,
+            label: $role->displayLabel(),
+            description: $role->description,
+            is_system: $role->isSystem(),
+            is_super_admin: $role->name === RoleEnum::SuperAdmin->value,
+            requires_two_factor: in_array($role->name, $twoFactorRoles, true),
+            permissions: $role->permissions->pluck('name')->sort()->values()
+                ->map(fn (string $name): Permission => Permission::from($name))->all(),
+            users_count: $usersCount,
+        );
     }
 
     private function roleResponse(Request $request, Role $role): JsonResponse
@@ -227,9 +232,9 @@ class RoleController extends Controller
         $organization = $request->user()->organization;
         $count = $this->userCounts($request, collect([$role]))[$role->id] ?? 0;
 
-        return new JsonResponse([
-            'data' => $this->present($role, $organization->twoFactorRoles(), $count),
-            'meta' => ['permission_groups' => Permission::catalogue()],
-        ]);
+        return Bff::respond(
+            $this->present($role, $organization->twoFactorRoles(), $count),
+            new RoleMetaData(PermissionGroupData::catalogue()),
+        );
     }
 }

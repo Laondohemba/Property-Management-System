@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Observable, map } from 'rxjs';
 
 import { applyProblemToForm, toProblem } from '../../../core/bff/problem';
-import { PermissionGroup, RoleDetail } from '../../../core/bff/types';
+import { Permission, PermissionGroup, RoleDetail } from '../../../core/bff/types';
 import { FieldError } from '../../../shared/ui/field-error';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { StaffApi } from './staff.api';
@@ -29,7 +29,7 @@ export class RoleEditPage implements OnInit {
 
   protected readonly role = signal<RoleDetail | null>(null);
   protected readonly groups = signal<PermissionGroup[]>([]);
-  protected readonly selected = signal<Set<string>>(new Set());
+  protected readonly selected = signal<Set<Permission>>(new Set());
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
@@ -76,11 +76,11 @@ export class RoleEditPage implements OnInit {
     });
   }
 
-  protected isChecked(permission: string): boolean {
+  protected isChecked(permission: Permission): boolean {
     return this.selected().has(permission);
   }
 
-  protected toggle(permission: string, checked: boolean): void {
+  protected toggle(permission: Permission, checked: boolean): void {
     this.selected.update((current) => {
       const next = new Set(current);
       checked ? next.add(permission) : next.delete(permission);

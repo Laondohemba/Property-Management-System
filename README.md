@@ -21,6 +21,7 @@ Key design choices:
 - **Private Backend-for-Frontend.** The Angular app talks only to view-shaped JSON endpoints under `/bff`, served from the same origin. There is no public REST API for the SPA and no CORS.
 - **Cookie sessions, no browser tokens.** Staff sign in with an HttpOnly session cookie and CSRF protection (Laravel Fortify + Sanctum SPA mode), with optional TOTP two-factor authentication.
 - **Multi-tenant, multi-property.** Every business record belongs to an organisation. Staff hold a role per property, and the SPA sends the active property in an `X-Property-Id` header that is validated on every request.
+- **Generated API types.** Every BFF response is a typed DTO (spatie/laravel-data). `composer types` generates the matching TypeScript types into `resources/angular/src/app/core/bff/generated/bff.ts`, and a backend test fails if the committed file is out of date.
 - **Consistent errors.** Failures are returned as RFC 9457 `application/problem+json` with stable error codes and field-level validation errors.
 - **Modular domains.** Backend code lives in `app/Modules/*` (Identity, Property, Inventory, Reporting, …), with shared infrastructure in `app/Support`.
 
@@ -88,6 +89,7 @@ There is no public sign-up. Staff are invited from **Settings → Users**; the i
 | `npm run build` | Builds the Angular app for production and publishes it into `public/` |
 | `npm test` | Runs the Angular unit tests (Karma + Jasmine, headless Chrome) |
 | `php artisan test` | Runs the backend test suite (PHPUnit) |
+| `composer types` | Regenerates the TypeScript types for the BFF contract after a DTO or enum changes |
 | `vendor/bin/pint` | Formats PHP code |
 
 After `npm run build`, `php artisan serve` serves the compiled SPA and the BFF from one origin, the same way Nginx does in production.
@@ -98,6 +100,7 @@ After `npm run build`, `php artisan serve` serves the compiled SPA and the BFF f
 app/
   Modules/            Domain modules (Identity, Property, Inventory, Reporting, …)
   Support/            Shared infrastructure (tenancy, property context, problem+json)
+  Modules/*/DTOs/     Typed BFF response shapes, the source of the generated TypeScript types
 routes/
   bff/                Private BFF endpoints, one file per module
   web.php             SPA entry point and deep-link fallback

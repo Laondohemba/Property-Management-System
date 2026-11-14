@@ -9,9 +9,11 @@ use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Models\User;
 use App\Modules\Property\Actions\CreateProperty;
 use App\Modules\Property\Actions\UpdateProperty;
+use App\Modules\Property\DTOs\PropertyData;
 use App\Modules\Property\Http\Requests\PropertyRequest;
-use App\Modules\Property\Http\Resources\PropertyResource;
 use App\Modules\Property\Models\Property;
+use App\Support\Http\Bff;
+use App\Support\Http\DTOs\PageMetaData;
 use App\Support\Http\Paginated;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,7 +43,10 @@ class PropertySettingsController extends Controller
             ->orderBy('name')
             ->paginate(Paginated::perPage($request));
 
-        return Paginated::response($properties, PropertyResource::class, $request);
+        return Bff::respond(
+            $properties->getCollection()->map(fn (Property $property): PropertyData => PropertyData::fromModel($property))->all(),
+            PageMetaData::fromPaginator($properties),
+        );
     }
 
     public function store(PropertyRequest $request, CreateProperty $createProperty): JsonResponse
@@ -50,20 +55,20 @@ class PropertySettingsController extends Controller
 
         $property = $createProperty->handle($request->user(), $request->validated());
 
-        return (new PropertyResource($property))->response()->setStatusCode(201);
+        return Bff::respond(PropertyData::fromModel($property), status: 201);
     }
 
-    public function show(Property $property): PropertyResource
+    public function show(Property $property): JsonResponse
     {
         Gate::authorize('view', $property);
 
-        return new PropertyResource($property);
+        return Bff::respond(PropertyData::fromModel($property));
     }
 
-    public function update(PropertyRequest $request, Property $property, UpdateProperty $updateProperty): PropertyResource
+    public function update(PropertyRequest $request, Property $property, UpdateProperty $updateProperty): JsonResponse
     {
         Gate::authorize('update', $property);
 
-        return new PropertyResource($updateProperty->handle($request->user(), $property, $request->validated()));
+        return Bff::respond(PropertyData::fromModel($updateProperty->handle($request->user(), $property, $request->validated())));
     }
 }

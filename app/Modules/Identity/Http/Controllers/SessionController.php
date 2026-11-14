@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Identity\Http\Resources\SessionResource;
+use App\Modules\Identity\Actions\BuildSessionView;
+use App\Modules\Identity\DTOs\SessionMetaData;
+use App\Support\Http\Bff;
+use App\Support\PropertyContext;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -13,12 +17,11 @@ use Illuminate\Http\Request;
  */
 class SessionController extends Controller
 {
-    public function __invoke(Request $request): SessionResource
+    public function __invoke(Request $request, PropertyContext $context, BuildSessionView $view): JsonResponse
     {
-        $user = $request->user()->loadMissing(['organization', 'roles']);
-
-        return (new SessionResource($user))->additional([
-            'meta' => ['app_version' => (string) config('app.version')],
-        ]);
+        return Bff::respond(
+            $view->handle($request->user(), $context->property()),
+            new SessionMetaData((string) config('app.version')),
+        );
     }
 }

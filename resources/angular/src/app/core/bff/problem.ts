@@ -1,21 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormGroup } from '@angular/forms';
 
-/** Field-level validation error inside a problem document. */
-export interface FieldError {
-  field: string;
-  message: string;
-}
+import type { FieldErrorData, ProblemData } from './generated/bff';
 
-/** RFC 9457 problem+json document as produced by the BFF (spec §8.4). */
-export interface Problem {
-  type: string;
-  title: string;
-  status: number;
-  code: string;
-  detail?: string;
-  errors?: FieldError[];
-}
+/** RFC 9457 problem+json document as produced by the BFF (spec §8.4); generated from ProblemData. */
+export type Problem = ProblemData;
+export type FieldError = FieldErrorData;
 
 function isProblem(value: unknown): value is Problem {
   return typeof value === 'object' && value !== null && 'status' in value && 'code' in value;
@@ -39,7 +29,11 @@ export function toProblem(error: unknown): Problem {
       title: error.status === 0 ? 'Network error' : error.statusText || 'Request failed',
       status: error.status,
       code: error.status === 0 ? 'network_error' : 'http_error',
-      detail: error.status === 0 ? 'The server could not be reached. Check your connection and try again.' : message,
+      ...(error.status === 0
+        ? { detail: 'The server could not be reached. Check your connection and try again.' }
+        : message !== undefined
+          ? { detail: message }
+          : {}),
     };
   }
 

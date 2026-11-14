@@ -6,9 +6,11 @@ namespace App\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Enums\Permission;
+use App\Modules\Inventory\DTOs\AmenityData;
 use App\Modules\Inventory\Http\Requests\AmenityRequest;
-use App\Modules\Inventory\Http\Resources\AmenityResource;
 use App\Modules\Inventory\Models\Amenity;
+use App\Support\Http\Bff;
+use App\Support\Http\DTOs\PageMetaData;
 use App\Support\Http\Paginated;
 use App\Support\PropertyContext;
 use Illuminate\Http\JsonResponse;
@@ -39,7 +41,10 @@ class AmenityController extends Controller implements HasMiddleware
             ->orderBy('name')
             ->paginate(Paginated::perPage($request));
 
-        return Paginated::response($amenities, AmenityResource::class, $request);
+        return Bff::respond(
+            $amenities->getCollection()->map(fn (Amenity $amenity): AmenityData => AmenityData::fromModel($amenity))->all(),
+            PageMetaData::fromPaginator($amenities),
+        );
     }
 
     public function store(AmenityRequest $request): JsonResponse
@@ -52,16 +57,16 @@ class AmenityController extends Controller implements HasMiddleware
             'name' => $request->validated('name'),
         ]);
 
-        return (new AmenityResource($amenity->loadCount('roomTypes')))->response()->setStatusCode(201);
+        return Bff::respond(AmenityData::fromModel($amenity->loadCount('roomTypes')), status: 201);
     }
 
-    public function update(AmenityRequest $request, Amenity $amenity): AmenityResource
+    public function update(AmenityRequest $request, Amenity $amenity): JsonResponse
     {
         $this->context->ensureOwns($amenity);
 
         $amenity->update(['name' => $request->validated('name')]);
 
-        return new AmenityResource($amenity->loadCount('roomTypes'));
+        return Bff::respond(AmenityData::fromModel($amenity->loadCount('roomTypes')));
     }
 
     /**

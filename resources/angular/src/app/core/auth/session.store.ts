@@ -3,7 +3,7 @@ import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { firstValueFrom } from 'rxjs';
 
-import { BffEnvelope, SessionData, SessionMeta } from '../bff/types';
+import { BffEnvelope, Permission, SessionData, SessionMeta } from '../bff/types';
 import { skipAuthRedirect } from '../http/context';
 
 export type SessionStatus = 'unknown' | 'authenticated' | 'guest';
@@ -55,7 +55,7 @@ export const SessionStore = signalStore(
     activePropertyId: computed(() => session()?.active_property?.id ?? selectedPropertyId()),
     /** Role at the active property (or the organisation-wide role for Super Admins). */
     primaryRole: computed(() => session()?.active_property?.role ?? session()?.roles[0] ?? null),
-    permissions: computed(() => new Set(session()?.permissions ?? [])),
+    permissions: computed(() => new Set<Permission>(session()?.permissions ?? [])),
     /** A role requires 2FA and the user has not enabled it yet (SYS-01). */
     mustSetUpTwoFactor: computed(() => {
       const user = session()?.user;
@@ -104,7 +104,7 @@ export const SessionStore = signalStore(
         return this.load();
       },
 
-      can(permission: string): boolean {
+      can(permission: Permission): boolean {
         return store.permissions().has(permission);
       },
 
