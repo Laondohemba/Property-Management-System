@@ -26,20 +26,29 @@
         <h2 class="pms-card-title">Business date <span class="text-sm font-normal text-muted">| {{ dashboard.property.code }}</span></h2>
         <p class="flex items-center gap-3 pb-1">
           <span class="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary"><pms-icon name="clock" size="size-7" /></span>
-          <span class="whitespace-nowrap font-heading text-xl font-bold text-navy">{{ dashboard.property.business_date }}</span>
+          <span>
+            <span class="block whitespace-nowrap font-heading text-xl font-bold text-navy">{{ dashboard.property.business_date }}</span>
+            <span class="block text-xs text-muted">{{ dashboard.property.timezone }} · {{ dashboard.property.currency }}</span>
+          </span>
         </p>
       </section>
-      <section class="pms-card">
-        <h2 class="pms-card-title">Timezone</h2>
-        <p class="font-heading text-xl font-bold text-navy">{{ dashboard.property.timezone }}</p>
-      </section>
-      <section class="pms-card">
-        <h2 class="pms-card-title">Currency</h2>
-        <p class="font-heading text-xl font-bold text-navy">{{ dashboard.property.currency }}</p>
-      </section>
+      @for (tile of dashboard.tiles; track tile.key) {
+        <section class="pms-card">
+          <h2 class="pms-card-title">{{ tile.label }}</h2>
+          <p class="flex items-center gap-3 pb-1">
+            <span class="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <pms-icon [name]="tile.key === 'rooms' ? 'key' : 'grid'" size="size-7" />
+            </span>
+            <span class="font-heading text-2xl font-bold text-navy">{{ tile.value }}</span>
+          </p>
+        </section>
+      }
       <section class="pms-card">
         <h2 class="pms-card-title">Check-in / out</h2>
-        <p class="font-heading text-xl font-bold text-navy">{{ dashboard.property.check_in_time }} – {{ dashboard.property.check_out_time }}</p>
+        <p class="flex items-center gap-3 pb-1">
+          <span class="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary"><pms-icon name="clock" size="size-7" /></span>
+          <span class="whitespace-nowrap font-heading text-xl font-bold text-navy">{{ dashboard.property.check_in_time }} – {{ dashboard.property.check_out_time }}</span>
+        </p>
       </section>
     </div>
 

@@ -44,6 +44,14 @@ export class Shell {
       settings.push({ label: 'Properties', icon: 'building', link: '/settings/properties' });
     }
 
+    if (this.session.permissions().has('settings.rooms')) {
+      settings.push(
+        { label: 'Room Types', icon: 'grid', link: '/settings/room-types' },
+        { label: 'Rooms', icon: 'key', link: '/settings/rooms' },
+        { label: 'Amenities', icon: 'shield', link: '/settings/amenities' },
+      );
+    }
+
     return [
       { items: [{ label: 'Dashboard', icon: 'grid', link: '/dashboard' }] },
       ...(settings.length ? [{ heading: 'Settings', items: settings }] : []),

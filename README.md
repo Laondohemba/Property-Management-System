@@ -22,7 +22,7 @@ Key design choices:
 - **Cookie sessions, no browser tokens.** Staff sign in with an HttpOnly session cookie and CSRF protection (Laravel Fortify + Sanctum SPA mode), with optional TOTP two-factor authentication.
 - **Multi-tenant, multi-property.** Every business record belongs to an organisation. Staff hold a role per property, and the SPA sends the active property in an `X-Property-Id` header that is validated on every request.
 - **Consistent errors.** Failures are returned as RFC 9457 `application/problem+json` with stable error codes and field-level validation errors.
-- **Modular domains.** Backend code lives in `app/Modules/*` (Identity, Property, Reporting, …), with shared infrastructure in `app/Support`.
+- **Modular domains.** Backend code lives in `app/Modules/*` (Identity, Property, Inventory, Reporting, …), with shared infrastructure in `app/Support`.
 
 UI styling uses Tailwind CSS with Angular CDK, following the NiceAdmin visual language.
 
@@ -70,6 +70,8 @@ Open **http://localhost:4200**. The Angular dev server proxies `/bff`, `/login`,
 | `admin@example.com` | Super Admin, the whole demo organisation |
 | `frontdesk@example.com` | Front Desk Agent at *Demo Grand Hotel* |
 
+The demo property comes with three room types, eight amenities and 20 rooms on two floors.
+
 To create a real organisation and its first administrator:
 
 ```bash
@@ -94,7 +96,7 @@ After `npm run build`, `php artisan serve` serves the compiled SPA and the BFF f
 
 ```
 app/
-  Modules/            Domain modules (Identity, Property, Reporting, …)
+  Modules/            Domain modules (Identity, Property, Inventory, Reporting, …)
   Support/            Shared infrastructure (tenancy, property context, problem+json)
 routes/
   bff/                Private BFF endpoints, one file per module

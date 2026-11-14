@@ -6,6 +6,7 @@ namespace App\Modules\Reporting\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Identity\Enums\Permission;
+use App\Modules\Inventory\Actions\SummarizeInventory;
 use App\Support\PropertyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
@@ -16,11 +17,12 @@ use Illuminate\Support\Facades\Gate;
  */
 class DashboardController extends Controller
 {
-    public function __invoke(PropertyContext $context): JsonResponse
+    public function __invoke(PropertyContext $context, SummarizeInventory $inventory): JsonResponse
     {
         Gate::authorize(Permission::DashboardView->value);
 
         $property = $context->require();
+        $counts = $inventory->handle($property);
 
         return new JsonResponse([
             'data' => [
@@ -35,7 +37,10 @@ class DashboardController extends Controller
                     'check_out_time' => substr((string) $property->check_out_time, 0, 5),
                     'local_time' => now($property->timezone)->toIso8601String(),
                 ],
-                'tiles' => [],
+                'tiles' => [
+                    ['key' => 'rooms', 'label' => 'Active rooms', 'value' => $counts['rooms']],
+                    ['key' => 'room_types', 'label' => 'Room types', 'value' => $counts['room_types']],
+                ],
                 'alerts' => [],
             ],
         ]);

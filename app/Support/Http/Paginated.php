@@ -26,8 +26,9 @@ final class Paginated
     /**
      * @param  LengthAwarePaginator<int, mixed>  $paginator
      * @param  class-string<JsonResource>  $resource
+     * @param  array<string, mixed>  $meta  extra view data, e.g. filter options
      */
-    public static function response(LengthAwarePaginator $paginator, string $resource, Request $request): JsonResponse
+    public static function response(LengthAwarePaginator $paginator, string $resource, Request $request, array $meta = []): JsonResponse
     {
         return new JsonResponse([
             'data' => $resource::collection($paginator->items())->resolve($request),
@@ -36,6 +37,7 @@ final class Paginated
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
                 'last_page' => $paginator->lastPage(),
+                ...$meta,
             ],
         ]);
     }

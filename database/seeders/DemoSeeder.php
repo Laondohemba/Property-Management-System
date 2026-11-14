@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 use App\Modules\Identity\Enums\Role as RoleEnum;
 use App\Modules\Identity\Models\User;
+use App\Modules\Inventory\Models\Amenity;
+use App\Modules\Inventory\Models\Room;
+use App\Modules\Inventory\Models\RoomType;
 use App\Modules\Property\Models\Organization;
 use App\Modules\Property\Models\Property;
 use Illuminate\Database\Seeder;
@@ -40,6 +43,53 @@ class DemoSeeder extends Seeder
         $property->users()->syncWithoutDetaching([
             $frontDesk->id => ['role_id' => Role::findByName(RoleEnum::FrontDeskAgent->value, 'web')->id],
         ]);
+
+        $this->rooms($property);
+    }
+
+    /**
+     * Amenities, three room types and 20 rooms on two floors.
+     */
+    private function rooms(Property $property): void
+    {
+        $owned = ['organization_id' => $property->organization_id, 'property_id' => $property->id];
+
+        $amenities = collect(['Wi-Fi', 'Air conditioning', 'Smart TV', 'Mini bar', 'Safe', 'Balcony', 'Bathtub', 'Workspace'])
+            ->mapWithKeys(fn (string $name): array => [
+                $name => Amenity::withoutGlobalScopes()->firstOrCreate([...$owned, 'name' => $name])->id,
+            ]);
+
+        $types = [
+            'STD' => ['Standard Room', 2, 2, 1, 3, [['type' => 'queen', 'count' => 1]], ['Wi-Fi', 'Air conditioning', 'Smart TV'], 0],
+            'DLX' => ['Deluxe Room', 2, 2, 2, 4, [['type' => 'king', 'count' => 1], ['type' => 'sofa_bed', 'count' => 1]], ['Wi-Fi', 'Air conditioning', 'Smart TV', 'Mini bar', 'Safe', 'Balcony'], 1],
+            'EXS' => ['Executive Suite', 2, 3, 2, 4, [['type' => 'king', 'count' => 1], ['type' => 'twin', 'count' => 1]], ['Wi-Fi', 'Air conditioning', 'Smart TV', 'Mini bar', 'Safe', 'Bathtub', 'Workspace'], 2],
+        ];
+
+        $typeIds = [];
+        foreach ($types as $code => [$name, $base, $adults, $children, $max, $beds, $amenityNames, $sort]) {
+            $roomType = RoomType::withoutGlobalScopes()->firstOrCreate([...$owned, 'code' => $code], [
+                'name' => $name, 'base_occupancy' => $base, 'max_adults' => $adults, 'max_children' => $children,
+                'max_occupancy' => $max, 'bed_configuration' => $beds, 'sort_order' => $sort,
+            ]);
+            $roomType->amenities()->syncWithoutDetaching($amenities->only($amenityNames)->values());
+            $typeIds[$code] = $roomType->id;
+        }
+
+        $layout = [
+            '1' => ['STD' => range(101, 108), 'DLX' => [109, 110]],
+            '2' => ['DLX' => range(201, 206), 'EXS' => [207, 208, 209, 210]],
+        ];
+
+        $sort = 0;
+        foreach ($layout as $floor => $byType) {
+            foreach ($byType as $code => $numbers) {
+                foreach ($numbers as $number) {
+                    Room::withoutGlobalScopes()->firstOrCreate([...$owned, 'number' => (string) $number], [
+                        'room_type_id' => $typeIds[$code], 'floor' => $floor, 'sort_order' => $sort++,
+                    ]);
+                }
+            }
+        }
     }
 
     private function user(Organization $organization, string $email, string $name): User
