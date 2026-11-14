@@ -12,7 +12,7 @@ import { FieldError } from '../../shared/ui/field-error';
   imports: [ReactiveFormsModule, RouterLink, FieldError],
   template: `
     <div class="pt-6 pb-4">
-      <h1 class="text-center font-display text-2xl font-medium text-navy">Reset Password</h1>
+      <h1 class="text-center font-display text-2xl font-medium text-heading">Reset Password</h1>
       <p class="mt-1 text-center text-sm">Enter your email and we will send you a reset link</p>
     </div>
 

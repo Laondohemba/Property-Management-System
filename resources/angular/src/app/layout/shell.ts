@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
+import { CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger } from '@angular/cdk/menu';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -8,6 +8,7 @@ import { filter, map } from 'rxjs';
 import { AuthApi } from '../core/auth/auth.api';
 import { SessionStore } from '../core/auth/session.store';
 import { AppVersionService } from '../core/http/app-version.service';
+import { ThemePreference, ThemeService } from '../core/theme/theme.service';
 import { initials } from '../shared/initials';
 import { Icon, IconName } from '../shared/ui/icon';
 import { Logo } from '../shared/ui/logo';
@@ -27,12 +28,18 @@ interface NavSection {
 @Component({
   selector: 'pms-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CdkMenu, CdkMenuItem, CdkMenuTrigger, Icon, Logo],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CdkMenu, CdkMenuGroup, CdkMenuItem, CdkMenuItemRadio, CdkMenuTrigger, Icon, Logo],
   templateUrl: './shell.html',
 })
 export class Shell {
   protected readonly session = inject(SessionStore);
   protected readonly appVersion = inject(AppVersionService);
+  protected readonly theme = inject(ThemeService);
+  protected readonly themeOptions: { value: ThemePreference; label: string }[] = [
+    { value: 'system', label: 'System' },
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+  ];
   private readonly authApi = inject(AuthApi);
   private readonly router = inject(Router);
 

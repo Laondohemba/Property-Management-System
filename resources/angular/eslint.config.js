@@ -19,6 +19,8 @@ module.exports = defineConfig([
     ],
     processor: angular.processInlineTemplates,
     rules: {
+      // Native alert/confirm/prompt are unstyled and ignore the theme: use ConfirmService and inline alerts.
+      'no-alert': 'error',
       '@angular-eslint/directive-selector': [
         'error',
         {

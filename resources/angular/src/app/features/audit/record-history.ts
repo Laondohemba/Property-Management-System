@@ -21,14 +21,14 @@ import { AuditApi, AuditSubjectType } from './audit.api';
           @for (entry of entries(); track entry.id) {
             <li class="border-l-2 border-line pl-3">
               <p class="text-sm">
-                <span class="font-semibold text-navy">{{ entry.causer?.name ?? 'System' }}</span>
+                <span class="font-semibold text-heading">{{ entry.causer?.name ?? 'System' }}</span>
                 <span class="text-muted"> · {{ entry.created_at | date: 'medium' }}</span>
               </p>
               <p class="text-sm">{{ entry.description }}</p>
               @for (change of changes(entry); track change.field) {
                 <p class="text-xs text-muted">
-                  <span class="font-mono text-navy">{{ change.field }}</span>:
-                  <span class="text-[#842029]">{{ change.before }}</span> → <span class="text-[#0f5132]">{{ change.after }}</span>
+                  <span class="font-mono text-heading">{{ change.field }}</span>:
+                  <span class="text-danger-fg">{{ change.before }}</span> → <span class="text-success-fg">{{ change.after }}</span>
                 </p>
               }
             </li>

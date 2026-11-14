@@ -18,7 +18,7 @@ import { InventoryApi } from './inventory.api';
 
     <section class="pms-card">
       <div class="flex flex-wrap items-center justify-between gap-3 pt-5 pb-4">
-        <h2 class="font-display text-lg font-medium text-navy">
+        <h2 class="font-display text-lg font-medium text-heading">
           {{ session.activeProperty()?.name }} <span class="text-sm font-normal text-muted">| {{ roomTypes().length }} room types</span>
         </h2>
         <a routerLink="/settings/room-types/new" class="pms-btn-primary">Add room type</a>
@@ -30,7 +30,7 @@ import { InventoryApi } from './inventory.api';
 
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
-          <thead class="border-b-2 border-line text-navy">
+          <thead class="border-b-2 border-line text-heading">
             <tr>
               <th scope="col" class="px-3 py-2 font-semibold">Name</th>
               <th scope="col" class="px-3 py-2 font-semibold">Code</th>
@@ -46,12 +46,12 @@ import { InventoryApi } from './inventory.api';
             @for (type of roomTypes(); track type.id) {
               <tr class="border-b border-line last:border-0 hover:bg-primary-soft">
                 <td class="px-3 py-3">
-                  <span class="font-semibold text-navy">{{ type.name }}</span>
+                  <span class="font-semibold text-heading">{{ type.name }}</span>
                   @if (type.amenities.length) {
                     <span class="block text-xs text-muted">{{ amenityNames(type) }}</span>
                   }
                 </td>
-                <td class="px-3 py-3"><code class="rounded bg-primary-soft px-1.5 py-0.5 text-navy">{{ type.code }}</code></td>
+                <td class="px-3 py-3"><code class="rounded bg-primary-soft px-1.5 py-0.5 text-heading">{{ type.code }}</code></td>
                 <td class="px-3 py-3 whitespace-nowrap">
                   {{ type.base_occupancy }} base · {{ type.max_occupancy }} max
                   <span class="block text-xs text-muted">{{ type.max_adults }} adults, {{ type.max_children }} children</span>

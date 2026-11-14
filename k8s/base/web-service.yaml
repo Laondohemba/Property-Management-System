@@ -1,0 +1,16 @@
+# Port 80 inside the cluster, mapped to the unprivileged container port (spec §3.1 hardening).
+apiVersion: v1
+kind: Service
+metadata:
+  name: pms-web
+  labels:
+    app.kubernetes.io/component: web
+spec:
+  type: ClusterIP
+  selector:
+    app: pms-monolith
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

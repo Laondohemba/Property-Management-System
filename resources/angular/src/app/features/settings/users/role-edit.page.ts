@@ -5,6 +5,7 @@ import { Observable, map } from 'rxjs';
 
 import { applyProblemToForm, toProblem } from '../../../core/bff/problem';
 import { Permission, PermissionGroup, RoleDetail } from '../../../core/bff/types';
+import { ConfirmService } from '../../../shared/ui/confirm-dialog';
 import { FieldError } from '../../../shared/ui/field-error';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { StaffApi } from './staff.api';
@@ -26,6 +27,7 @@ export class RoleEditPage implements OnInit {
 
   private readonly api = inject(StaffApi);
   private readonly router = inject(Router);
+  private readonly confirm = inject(ConfirmService);
 
   protected readonly role = signal<RoleDetail | null>(null);
   protected readonly groups = signal<PermissionGroup[]>([]);
@@ -140,9 +142,18 @@ export class RoleEditPage implements OnInit {
     });
   }
 
-  protected remove(): void {
+  protected async remove(): Promise<void> {
     const role = this.role();
-    if (!role || !confirm(`Delete the role "${role.label}"?`)) {
+    const confirmed =
+      role !== null &&
+      (await this.confirm.ask({
+        title: 'Delete role',
+        message: `The custom role "${role.label}" will be deleted. This cannot be undone.`,
+        confirmLabel: 'Delete role',
+        tone: 'danger',
+      }));
+
+    if (!role || !confirmed) {
       return;
     }
 

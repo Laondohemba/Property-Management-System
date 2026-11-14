@@ -1,0 +1,47 @@
+# Staging: same workloads at a smaller scale, on its own host and database.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: staging
+
+resources:
+  - ../../base
+
+images:
+  - name: pms
+    newName: registry.digitalocean.com/hospitable/pms
+    newTag: v0.8.0
+
+labels:
+  - pairs:
+      app.kubernetes.io/instance: pms-staging
+    includeSelectors: false
+
+patches:
+  - target: { kind: ConfigMap, name: pms-config }
+    patch: |-
+      - { op: replace, path: /data/APP_ENV, value: staging }
+      - { op: replace, path: /data/APP_URL, value: "https://staging.pms.example.com" }
+      - { op: replace, path: /data/SANCTUM_STATEFUL_DOMAINS, value: staging.pms.example.com }
+      - { op: replace, path: /data/DB_DATABASE, value: pms_staging }
+      - { op: replace, path: /data/AWS_BUCKET, value: pms-media-staging }
+      - { op: replace, path: /data/LOG_LEVEL, value: debug }
+  - target: { kind: Ingress, name: pms-web }
+    patch: |-
+      - { op: replace, path: /spec/tls/0/hosts/0, value: staging.pms.example.com }
+      - { op: replace, path: /spec/rules/0/host, value: staging.pms.example.com }
+  - target: { kind: Deployment, name: hospitable-monolith-web }
+    patch: |-
+      - { op: replace, path: /spec/replicas, value: 2 }
+  - target: { kind: HorizontalPodAutoscaler, name: hospitable-monolith-web }
+    patch: |-
+      - { op: replace, path: /spec/minReplicas, value: 2 }
+      - { op: replace, path: /spec/maxReplicas, value: 4 }
+  - target: { kind: Deployment, name: pms-horizon }
+    patch: |-
+      - { op: replace, path: /spec/replicas, value: 1 }
+  # With a single worker, a PDB of minAvailable 1 would block node drains entirely.
+  - target: { kind: PodDisruptionBudget, name: pms-horizon }
+    patch: |-
+      - { op: remove, path: /spec/minAvailable }
+      - { op: add, path: /spec/maxUnavailable, value: 1 }

@@ -29,9 +29,9 @@ import { TwoFactorSettings } from './two-factor-settings';
             <span class="flex size-[120px] items-center justify-center rounded-full bg-primary-soft font-heading text-4xl font-bold text-primary">
               {{ initials() }}
             </span>
-            <h2 class="mt-3 font-heading text-2xl font-bold text-[#2c384e]">{{ session.user()?.name }}</h2>
+            <h2 class="mt-3 font-heading text-2xl font-bold text-heading">{{ session.user()?.name }}</h2>
             @if (session.primaryRole(); as role) {
-              <p class="mt-1 text-lg text-[#444]">{{ role.label }}</p>
+              <p class="mt-1 text-lg text-body">{{ role.label }}</p>
             }
             <dl class="mt-3 space-y-1.5 text-sm text-muted">
               @if (session.organization(); as organization) {

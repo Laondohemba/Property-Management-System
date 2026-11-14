@@ -1,0 +1,57 @@
+# Non-sensitive configuration shared by every pod role (spec §3.5, DEP-09).
+# Sensitive values (APP_KEY, database and Redis credentials, storage and mail keys) come from
+# the pms-secrets Secret, which is created out of band and never committed (see k8s/README.md).
+# APP_VERSION is baked into the image at build time and must not be set here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pms-config
+  labels:
+    app.kubernetes.io/component: config
+data:
+  APP_NAME: PMS
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: https://pms.example.com
+  APP_LOCALE: en
+  APP_FALLBACK_LOCALE: en
+  # `php artisan down` reaches every pod through Redis, not one pod's local disk.
+  APP_MAINTENANCE_DRIVER: cache
+  APP_MAINTENANCE_STORE: redis
+
+  # Structured JSON logs on stderr, collected by the cluster logging agent.
+  LOG_CHANNEL: stderr
+  LOG_STDERR_FORMATTER: Monolog\Formatter\JsonFormatter
+  LOG_LEVEL: info
+
+  DB_CONNECTION: mysql
+  DB_HOST: mysql.example.internal
+  DB_PORT: "3306"
+  DB_DATABASE: pms
+
+  REDIS_CLIENT: predis
+  REDIS_HOST: redis.example.internal
+  REDIS_PORT: "6379"
+
+  # Stateless pods: sessions, cache, locks and queues live in Redis; files in object storage.
+  SESSION_DRIVER: redis
+  SESSION_LIFETIME: "120"
+  SESSION_SECURE_COOKIE: "true"
+  SESSION_SAME_SITE: lax
+  SANCTUM_STATEFUL_DOMAINS: pms.example.com
+  CACHE_STORE: redis
+  QUEUE_CONNECTION: redis
+  FILESYSTEM_DISK: s3
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_BUCKET: pms-media
+  AWS_USE_PATH_STYLE_ENDPOINT: "false"
+
+  BROADCAST_CONNECTION: log
+
+  MAIL_MAILER: smtp
+  MAIL_HOST: smtp.example.com
+  MAIL_PORT: "587"
+  MAIL_FROM_ADDRESS: no-reply@pms.example.com
+  MAIL_FROM_NAME: PMS
+
+  BCRYPT_ROUNDS: "12"

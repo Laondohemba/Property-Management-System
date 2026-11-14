@@ -25,15 +25,17 @@ Key design choices:
 - **Generated API types.** Every BFF response is a typed DTO (spatie/laravel-data). `composer types` generates the matching TypeScript types into `resources/angular/src/app/core/bff/generated/bff.ts`, and a backend test fails if the committed file is out of date.
 - **Consistent errors.** Failures are returned as RFC 9457 `application/problem+json` with stable error codes and field-level validation errors.
 - **Modular domains.** Backend code lives in `app/Modules/*` (Identity, Property, Inventory, Reporting, …), with shared infrastructure in `app/Support`.
+- **One image, four roles.** The same container image runs as web pods (Nginx + PHP-FPM), Horizon queue workers, a single scheduler and, later, Reverb WebSockets. Migrations run once per release in a Kubernetes Job, and every schema change follows the expand/contract pattern so rollouts and rollbacks never break running pods. See [k8s/README.md](k8s/README.md).
 
 UI styling uses Tailwind CSS with Angular CDK, following the NiceAdmin visual language.
 
 ## Requirements
 
 - PHP 8.3+ with Composer
-- Node.js 22.12+ and npm
-- MySQL 8
-- Redis (5+ for local development; 7+ for deployed environments)
+- Node.js 24 LTS (22.13+ also works) and npm 11.6.1 (`npm install -g npm@11.6.1`, the version pinned in `resources/angular/package.json`)
+- MySQL 8 (8.4 LTS in CI)
+- Redis (5+ for local development; 8 in CI and deployed environments)
+- Docker, only to build or run the production image
 
 On Windows, [Laragon](https://laragon.org) provides PHP, MySQL and Redis.
 
@@ -95,6 +97,8 @@ There is no public sign-up. Staff are invited from **Settings → Users**; the i
 | `composer check` | Pint (style), Larastan level 8 (static analysis) and the full backend test suite |
 | `npm --prefix resources/angular run lint` | ESLint for the Angular app |
 | `vendor/bin/pint` | Formats PHP code |
+| `docker build -t pms:<sha> .` | Builds the production image (Angular compiled in a Node stage, PHP 8.3 FPM + Nginx runtime) |
+| `php artisan horizon` | Runs the queue workers locally (Linux/macOS; on Windows use `php artisan queue:work`) |
 
 After `npm run build`, `php artisan serve` serves the compiled SPA and the BFF from one origin, the same way Nginx does in production.
 
@@ -104,6 +108,8 @@ Every pull request runs the [CI workflow](.github/workflows/ci.yml):
 
 - **Backend:** Pint, Larastan (level 8), and the PHPUnit suite against MySQL 8 and Redis 7. The suite includes architecture tests (module boundaries, strict types, layering) and fails if the generated TypeScript types are out of date. Composer dependency audit.
 - **Frontend:** ESLint, unit tests in headless Chrome, a production build and an npm dependency audit.
+- **Container and manifests:** the image is built, scanned for HIGH/CRITICAL vulnerabilities (Trivy) and smoke-tested as a non-root, read-only container; every Kustomize overlay is rendered and validated (kubeconform) and may not deploy an untagged or `:latest` image.
+- **Migrations:** every migration is labelled `@migration expand` or `@migration contract`, and expand migrations may not drop, rename, change columns or add NOT NULL columns without defaults (spec §4.3).
 
 Run `composer check` and `npm --prefix resources/angular run lint` locally before pushing.
 
@@ -120,8 +126,11 @@ routes/
 database/             Migrations, factories, seeders
 resources/angular/    Angular workspace (core/, layout/, shared/, features/)
 docs/                 Roadmap and project documentation
+docker/               Nginx, PHP-FPM, Supervisor and PHP config, image entrypoint
+k8s/                  Kustomize base, release Job, realtime component, staging/production overlays
 tests/                Backend feature and architecture tests
 .github/workflows/    CI pipeline
+Dockerfile            Multi-stage production image
 ```
 
 ## Author

@@ -20,7 +20,7 @@ import { PropertiesApi } from './properties.api';
 
     <section class="pms-card">
       <div class="flex flex-wrap items-center justify-between gap-3 pt-5 pb-4">
-        <h2 class="font-display text-lg font-medium text-navy">
+        <h2 class="font-display text-lg font-medium text-heading">
           All properties <span class="text-sm font-normal text-muted">| {{ meta()?.total ?? 0 }} total</span>
         </h2>
         <div class="flex flex-wrap items-center gap-3">
@@ -39,7 +39,7 @@ import { PropertiesApi } from './properties.api';
 
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
-          <thead class="border-b-2 border-line text-navy">
+          <thead class="border-b-2 border-line text-heading">
             <tr>
               <th scope="col" class="px-3 py-2 font-semibold">Name</th>
               <th scope="col" class="px-3 py-2 font-semibold">Code</th>
@@ -54,17 +54,17 @@ import { PropertiesApi } from './properties.api';
           <tbody>
             @for (property of properties(); track property.id) {
               <tr class="border-b border-line last:border-0 hover:bg-primary-soft">
-                <td class="px-3 py-3 font-semibold text-navy">{{ property.name }}</td>
-                <td class="px-3 py-3"><code class="rounded bg-primary-soft px-1.5 py-0.5 text-navy">{{ property.code }}</code></td>
+                <td class="px-3 py-3 font-semibold text-heading">{{ property.name }}</td>
+                <td class="px-3 py-3"><code class="rounded bg-primary-soft px-1.5 py-0.5 text-heading">{{ property.code }}</code></td>
                 <td class="px-3 py-3">{{ property.timezone }}</td>
                 <td class="px-3 py-3">{{ property.currency }}</td>
                 <td class="px-3 py-3">{{ property.business_date }}</td>
                 <td class="px-3 py-3"><pms-record-stamps [stamps]="property.stamps" [compact]="true" /></td>
                 <td class="px-3 py-3">
                   @if (property.is_active) {
-                    <span class="rounded bg-[#d1e7dd] px-2 py-0.5 text-xs font-semibold text-[#0f5132]">Active</span>
+                    <span class="rounded bg-success-soft px-2 py-0.5 text-xs font-semibold text-success-fg">Active</span>
                   } @else {
-                    <span class="rounded bg-[#e2e3e5] px-2 py-0.5 text-xs font-semibold text-[#41464b]">Inactive</span>
+                    <span class="rounded bg-neutral-soft px-2 py-0.5 text-xs font-semibold text-neutral-fg">Inactive</span>
                   }
                 </td>
                 <td class="px-3 py-3 text-right">

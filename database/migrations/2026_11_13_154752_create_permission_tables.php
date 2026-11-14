@@ -4,6 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Creates the role and permission tables (spatie/laravel-permission).
+ *
+ * @migration expand
+ */
 return new class extends Migration
 {
     /**

@@ -1,0 +1,63 @@
+# Scheduler role: exactly one pod, replaced (never surged) on rollout (spec §3.2, §3.4).
+# Tasks also use onOneServer() and withoutOverlapping() (routes/console.php) as defence in
+# depth, and only dispatch work to the queues.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pms-scheduler
+  labels:
+    app.kubernetes.io/component: scheduler
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pms
+      app.kubernetes.io/component: scheduler
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pms
+        app.kubernetes.io/component: scheduler
+    spec:
+      serviceAccountName: pms
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 90
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 82
+        runAsGroup: 82
+        fsGroup: 82
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: scheduler
+          image: pms
+          args: ["php", "artisan", "schedule:work"]
+          envFrom:
+            - configMapRef:
+                name: pms-config
+            - secretRef:
+                name: pms-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: storage, mountPath: /var/www/html/storage }
+            - { name: bootstrap-cache, mountPath: /var/www/html/bootstrap/cache }
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 256Mi } }
+        - { name: storage, emptyDir: { sizeLimit: 256Mi } }
+        - { name: bootstrap-cache, emptyDir: { sizeLimit: 16Mi } }

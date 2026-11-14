@@ -4,6 +4,7 @@ import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } 
 import { SessionStore } from '../../../core/auth/session.store';
 import { applyProblemToForm, toProblem } from '../../../core/bff/problem';
 import { Amenity } from '../../../core/bff/types';
+import { ConfirmService } from '../../../shared/ui/confirm-dialog';
 import { FieldError } from '../../../shared/ui/field-error';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { InventoryApi } from './inventory.api';
@@ -44,8 +45,8 @@ import { InventoryApi } from './inventory.api';
               <button type="button" class="pms-btn-primary px-3 py-1" (click)="saveRename(amenity)" [disabled]="busy()">Save</button>
               <button type="button" class="pms-btn-secondary px-3 py-1" (click)="editingId.set(null)">Cancel</button>
             } @else {
-              <span class="flex-1 text-sm font-semibold text-navy">{{ amenity.name }}</span>
-              <span class="text-xs text-muted">{{ amenity.room_types_count ?? 0 }} room types</span>
+              <span class="flex-1 text-sm font-semibold text-heading">{{ amenity.name }}</span>
+              <span class="text-xs text-muted">{{ amenity.room_types_count ?? 0 }} {{ (amenity.room_types_count ?? 0) === 1 ? 'room type' : 'room types' }}</span>
               <button type="button" class="cursor-pointer text-sm text-primary hover:underline" (click)="startRename(amenity)">Rename</button>
               <button type="button" class="cursor-pointer text-sm text-danger hover:underline" (click)="remove(amenity)" [disabled]="busy()">Remove</button>
             }
@@ -65,6 +66,7 @@ export class AmenitiesPage {
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+  private readonly confirm = inject(ConfirmService);
   protected readonly editingId = signal<string | null>(null);
   protected editName = '';
 
@@ -111,10 +113,18 @@ export class AmenitiesPage {
     });
   }
 
-  protected remove(amenity: Amenity): void {
-    const usage = amenity.room_types_count ? ` It is used by ${amenity.room_types_count} room type(s).` : '';
+  protected async remove(amenity: Amenity): Promise<void> {
+    const count = amenity.room_types_count ?? 0;
+    const confirmed = await this.confirm.ask({
+      title: 'Remove amenity',
+      message: count
+        ? `"${amenity.name}" will be removed from ${count} room type${count === 1 ? '' : 's'}.`
+        : `"${amenity.name}" will be removed from this property's amenity list.`,
+      confirmLabel: 'Remove',
+      tone: 'danger',
+    });
 
-    if (!confirm(`Remove "${amenity.name}"?${usage}`)) {
+    if (!confirmed) {
       return;
     }
 

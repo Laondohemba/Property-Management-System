@@ -1,0 +1,25 @@
+# WebSocket route with long idle timeouts (spec §3.4). ingress-nginx upgrades connections
+# automatically; the timeouts keep idle sockets open between Reverb's pings.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pms-reverb
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [ws.pms.example.com]
+      secretName: pms-ws-tls
+  rules:
+    - host: ws.pms.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pms-reverb
+                port:
+                  name: ws

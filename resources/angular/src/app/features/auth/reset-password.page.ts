@@ -12,7 +12,7 @@ import { FieldError } from '../../shared/ui/field-error';
   imports: [ReactiveFormsModule, RouterLink, FieldError],
   template: `
     <div class="pt-6 pb-4">
-      <h1 class="text-center font-display text-2xl font-medium text-navy">Choose a New Password</h1>
+      <h1 class="text-center font-display text-2xl font-medium text-heading">Choose a New Password</h1>
       <p class="mt-1 text-center text-sm">At least 12 characters, with upper and lower case letters, a number and a symbol.</p>
     </div>
 

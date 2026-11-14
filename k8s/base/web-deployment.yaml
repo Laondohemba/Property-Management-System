@@ -1,0 +1,110 @@
+# Web role: Nginx + PHP-FPM serving the SPA, the BFF, the integration surface and /up
+# (spec §3.2, §3.3). Baseline from the architecture document plus the additions it lists:
+# graceful drain, startup probe, explicit probe timings, envFrom config and placement.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospitable-monolith-web
+  labels:
+    app: pms-monolith
+    app.kubernetes.io/component: web
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: pms-monolith
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        app: pms-monolith
+        app.kubernetes.io/component: web
+    spec:
+      serviceAccountName: pms
+      automountServiceAccountToken: false
+      # preStop sleep (10 s) + Nginx/FPM drain (up to 30 s) + margin.
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 82 # www-data in the Alpine PHP image
+        runAsGroup: 82
+        fsGroup: 82
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: pms-monolith
+              app.kubernetes.io/component: web
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: pms-monolith
+              app.kubernetes.io/component: web
+      containers:
+        - name: monolith-runtime
+          image: pms
+          # Image default command: Supervisor running Nginx and PHP-FPM.
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: pms-config
+            - secretRef:
+                name: pms-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          # /up is cheap and never calls third parties (spec §3.6).
+          startupProbe:
+            httpGet: { path: /up, port: http }
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 24
+          livenessProbe:
+            httpGet: { path: /up, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /up, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          lifecycle:
+            # Let the ingress and endpoints drop this pod before Nginx stops accepting.
+            preStop:
+              exec:
+                command: ["sleep", "10"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: storage, mountPath: /var/www/html/storage }
+            - { name: bootstrap-cache, mountPath: /var/www/html/bootstrap/cache }
+      # Scratch space only: local disk may disappear at any time (spec §3.5).
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 256Mi } }
+        - { name: storage, emptyDir: { sizeLimit: 256Mi } }
+        - { name: bootstrap-cache, emptyDir: { sizeLimit: 16Mi } }

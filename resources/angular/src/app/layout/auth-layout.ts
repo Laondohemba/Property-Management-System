@@ -14,17 +14,17 @@ import { Logo } from '../shared/ui/logo';
         <div class="flex justify-center py-6">
           <span class="flex items-center gap-2">
             <pms-logo />
-            <span class="font-heading text-[26px] font-bold text-navy">PMS</span>
+            <span class="font-heading text-[26px] font-bold text-heading">PMS</span>
           </span>
         </div>
 
-        <div class="mb-3 rounded-[5px] bg-white px-5 pb-6 shadow-card">
+        <div class="mb-3 rounded-[5px] bg-surface px-5 pb-6 shadow-card">
           <router-outlet />
         </div>
 
-        <p class="text-center text-[13px] text-navy">&copy; {{ year }} PMS</p>
+        <p class="text-center text-[13px] text-heading">&copy; {{ year }} PMS</p>
         <p class="mt-1 text-center text-xs text-muted">
-          Developed by <span class="font-semibold text-navy">Luper Aondohemba</span> ·
+          Developed by <span class="font-semibold text-heading">Luper Aondohemba</span> ·
           <a href="https://luper.dev" target="_blank" rel="noopener" class="font-semibold hover:underline">luper.dev</a>
         </p>
       </div>

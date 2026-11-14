@@ -1,0 +1,11 @@
+# Node maintenance can never remove more than one web pod at a time (DEP-11).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: pms-web
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: pms-monolith
+      app.kubernetes.io/component: web

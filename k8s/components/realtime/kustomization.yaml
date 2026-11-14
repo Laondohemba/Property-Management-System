@@ -1,0 +1,43 @@
+# Optional realtime role (Laravel Reverb, spec §3.2 role 4; DEP-12, P2).
+# Not enabled yet: it is switched on together with the live calendar (CAL-07), when
+# laravel/reverb is installed. To enable it, add this to an overlay:
+#
+#   components:
+#     - ../../components/realtime
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+resources:
+  - reverb-deployment.yaml
+  - reverb-service.yaml
+  - reverb-pdb.yaml
+  - reverb-ingress.yaml
+
+patches:
+  # Broadcast from every web and worker pod through Reverb.
+  - target:
+      kind: ConfigMap
+      name: pms-config
+    patch: |-
+      - op: replace
+        path: /data/BROADCAST_CONNECTION
+        value: reverb
+      - op: add
+        path: /data/REVERB_SERVER_HOST
+        value: 0.0.0.0
+      - op: add
+        path: /data/REVERB_SERVER_PORT
+        value: "8080"
+      - op: add
+        path: /data/REVERB_HOST
+        value: ws.pms.example.com
+      - op: add
+        path: /data/REVERB_PORT
+        value: "443"
+      - op: add
+        path: /data/REVERB_SCHEME
+        value: https
+      # Horizontal scaling through Redis pub/sub.
+      - op: add
+        path: /data/REVERB_SCALING_ENABLED
+        value: "true"

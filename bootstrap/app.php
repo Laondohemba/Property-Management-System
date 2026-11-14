@@ -36,6 +36,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(AddAppVersionHeader::class);
 
+        // TLS terminates at the Kubernetes ingress (spec §3.3): trust its forwarded headers
+        // from private cluster ranges only, so URLs and secure cookies use https.
+        $middleware->trustProxies(at: ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '127.0.0.1']);
+
         $middleware->web(append: [
             EnsureAccountIsActive::class,
         ]);

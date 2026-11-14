@@ -16,7 +16,7 @@ import { StaffApi } from './staff.api';
 
     <section class="pms-card">
       <div class="flex flex-wrap items-center justify-between gap-3 pt-5 pb-4">
-        <h2 class="font-display text-lg font-medium text-navy">Roles <span class="text-sm font-normal text-muted">| {{ roles().length }}</span></h2>
+        <h2 class="font-display text-lg font-medium text-heading">Roles <span class="text-sm font-normal text-muted">| {{ roles().length }}</span></h2>
         <a routerLink="/settings/roles/new" class="pms-btn-primary">New custom role</a>
       </div>
       <p class="mb-4 text-sm text-muted">
@@ -29,7 +29,7 @@ import { StaffApi } from './staff.api';
 
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
-          <thead class="border-b-2 border-line text-navy">
+          <thead class="border-b-2 border-line text-heading">
             <tr>
               <th scope="col" class="px-3 py-2 font-semibold">Role</th>
               <th scope="col" class="px-3 py-2 font-semibold">Type</th>
@@ -43,7 +43,7 @@ import { StaffApi } from './staff.api';
             @for (role of roles(); track role.name) {
               <tr class="border-b border-line last:border-0 hover:bg-primary-soft">
                 <td class="px-3 py-3">
-                  <span class="font-semibold text-navy">{{ role.label }}</span>
+                  <span class="font-semibold text-heading">{{ role.label }}</span>
                   @if (role.description) {
                     <span class="block text-xs text-muted">{{ role.description }}</span>
                   }

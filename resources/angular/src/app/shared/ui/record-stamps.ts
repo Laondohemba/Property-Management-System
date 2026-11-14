@@ -20,13 +20,13 @@ import { RecordStamps } from '../../core/bff/types';
         @if (stamps().created_at) {
           {{ stamps().created_at | date: 'medium' }}
         }
-        by <span class="font-semibold text-navy">{{ stamps().created_by?.name ?? 'System' }}</span>
+        by <span class="font-semibold text-heading">{{ stamps().created_by?.name ?? 'System' }}</span>
         <span class="mx-1">·</span>
         Last updated
         @if (stamps().updated_at) {
           {{ stamps().updated_at | date: 'medium' }}
         }
-        by <span class="font-semibold text-navy">{{ stamps().updated_by?.name ?? 'System' }}</span>
+        by <span class="font-semibold text-heading">{{ stamps().updated_by?.name ?? 'System' }}</span>
       </p>
     }
   `,

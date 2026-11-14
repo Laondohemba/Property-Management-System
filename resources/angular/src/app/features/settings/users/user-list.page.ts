@@ -21,7 +21,7 @@ import { StaffApi } from './staff.api';
 
     <section class="pms-card">
       <div class="flex flex-wrap items-center justify-between gap-3 pt-5 pb-4">
-        <h2 class="font-display text-lg font-medium text-navy">Staff <span class="text-sm font-normal text-muted">| {{ meta()?.total ?? 0 }} people</span></h2>
+        <h2 class="font-display text-lg font-medium text-heading">Staff <span class="text-sm font-normal text-muted">| {{ meta()?.total ?? 0 }} people</span></h2>
         <a routerLink="/settings/users/invite" class="pms-btn-primary">Invite staff</a>
       </div>
 
@@ -56,7 +56,7 @@ import { StaffApi } from './staff.api';
 
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
-          <thead class="border-b-2 border-line text-navy">
+          <thead class="border-b-2 border-line text-heading">
             <tr>
               <th scope="col" class="px-3 py-2 font-semibold">Name</th>
               <th scope="col" class="px-3 py-2 font-semibold">Access</th>
@@ -70,12 +70,12 @@ import { StaffApi } from './staff.api';
             @for (user of users(); track user.id) {
               <tr class="border-b border-line last:border-0 hover:bg-primary-soft">
                 <td class="px-3 py-3">
-                  <span class="font-semibold text-navy">{{ user.name }}</span>
+                  <span class="font-semibold text-heading">{{ user.name }}</span>
                   <span class="block text-xs text-muted">{{ user.email }}</span>
                 </td>
                 <td class="px-3 py-3">
                   @if (user.is_super_admin) {
-                    <span class="block"><span class="font-semibold text-navy">Super Admin</span><span class="ml-1 text-xs text-muted">· all properties</span></span>
+                    <span class="block"><span class="font-semibold text-heading">Super Admin</span><span class="ml-1 text-xs text-muted">· all properties</span></span>
                   }
                   @for (assignment of user.assignments; track assignment.property.id) {
                     <span class="block">{{ assignment.property.name }}<span class="ml-1 text-xs text-muted">· {{ assignment.role?.label }}</span></span>

@@ -1,0 +1,27 @@
+# Horizontal autoscaling of the web role on CPU (spec §3.3, DEP-02).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hospitable-monolith-web
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hospitable-monolith-web
+  minReplicas: 3
+  maxReplicas: 12 # [to be confirmed after load testing]
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    # Scale down slowly so a short lull does not drain capacity just before the next peak.
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60

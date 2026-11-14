@@ -1,0 +1,30 @@
+# Public entry point with TLS terminated at the ingress (spec §3.3). Written for ingress-nginx;
+# adapt the annotations if the cluster uses another controller.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pms-web
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 24m
+    # During a rollout a content-hashed chunk may be requested from a pod that does not
+    # hold it; retry such 404s (and failed connections) once on another pod (spec §4.4).
+    # Only idempotent requests are ever retried.
+    nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout http_502 http_503 http_404"
+    nginx.ingress.kubernetes.io/proxy-next-upstream-tries: "2"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [pms.example.com]
+      secretName: pms-tls
+  rules:
+    - host: pms.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pms-web
+                port:
+                  name: http

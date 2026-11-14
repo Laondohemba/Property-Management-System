@@ -1,0 +1,20 @@
+# Production workloads. Registry, namespace and hosts are placeholders (spec §3.3 note).
+# Deploy pipeline: `kustomize edit set image pms=registry.digitalocean.com/hospitable/pms:<git-sha>`
+# in this directory and in ./release, then follow the rollout sequence in k8s/README.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: production
+
+resources:
+  - ../../base
+
+images:
+  - name: pms
+    newName: registry.digitalocean.com/hospitable/pms
+    newTag: v0.8.0
+
+labels:
+  - pairs:
+      app.kubernetes.io/instance: pms-production
+    includeSelectors: false

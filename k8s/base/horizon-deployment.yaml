@@ -1,0 +1,83 @@
+# Worker role: Laravel Horizon supervising every queue (spec §3.2, §3.4, §10.3; DEP-05).
+# Same image as the web role; only the command, scaling and shutdown behaviour differ.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pms-horizon
+  labels:
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pms
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pms
+        app.kubernetes.io/component: worker
+    spec:
+      serviceAccountName: pms
+      automountServiceAccountToken: false
+      # >= longest job timeout (reports: 600 s, config/horizon.php) + margin. On SIGTERM
+      # Horizon lets running jobs finish or releases them back to the queue.
+      terminationGracePeriodSeconds: 900
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 82
+        runAsGroup: 82
+        fsGroup: 82
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: pms
+              app.kubernetes.io/component: worker
+      containers:
+        - name: horizon
+          image: pms
+          # `args` replaces the image CMD and keeps the entrypoint, which warms the caches.
+          args: ["php", "artisan", "horizon"]
+          envFrom:
+            - configMapRef:
+                name: pms-config
+            - secretRef:
+                name: pms-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1536Mi"
+              cpu: "1000m"
+          livenessProbe:
+            exec:
+              command: ["php", "artisan", "horizon:status"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: storage, mountPath: /var/www/html/storage }
+            - { name: bootstrap-cache, mountPath: /var/www/html/bootstrap/cache }
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 1Gi } }
+        - { name: storage, emptyDir: { sizeLimit: 1Gi } }
+        - { name: bootstrap-cache, emptyDir: { sizeLimit: 16Mi } }

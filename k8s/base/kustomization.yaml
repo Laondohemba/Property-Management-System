@@ -1,0 +1,26 @@
+# Long-running workloads shared by every environment (spec §3.2 to §3.5).
+# The release Job lives in ../release and is applied first, on its own (spec §3.6).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: pms
+      app.kubernetes.io/part-of: pms
+    includeSelectors: false
+
+resources:
+  - serviceaccount.yaml
+  - configmap.yaml
+  - web-deployment.yaml
+  - web-service.yaml
+  - web-hpa.yaml
+  - web-pdb.yaml
+  - ingress.yaml
+  - horizon-deployment.yaml
+  - horizon-pdb.yaml
+  - scheduler-deployment.yaml
+
+# Containers use the image name "pms"; each overlay sets the registry and an immutable tag
+# (git SHA or release version, DEP-10). The moving "latest" tag is never deployed.
+

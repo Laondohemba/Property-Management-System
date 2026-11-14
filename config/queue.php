@@ -68,9 +68,12 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
+            // Longer than the longest Horizon supervisor timeout (reports: 600 s, config/horizon.php)
+            // so a job still running is never released to a second worker.
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 660),
             'block_for' => null,
-            'after_commit' => false,
+            // Jobs dispatched inside a transaction are queued only once it commits (spec §10.2).
+            'after_commit' => true,
         ],
 
         'deferred' => [

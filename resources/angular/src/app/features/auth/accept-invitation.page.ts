@@ -15,7 +15,7 @@ import { FieldError } from '../../shared/ui/field-error';
   imports: [ReactiveFormsModule, RouterLink, FieldError],
   template: `
     <div class="pt-6 pb-4">
-      <h1 class="text-center font-display text-2xl font-medium text-navy">Welcome to PMS</h1>
+      <h1 class="text-center font-display text-2xl font-medium text-heading">Welcome to PMS</h1>
       <p class="mt-1 text-center text-sm">Choose a password to activate your account</p>
     </div>
 
@@ -26,7 +26,7 @@ import { FieldError } from '../../shared/ui/field-error';
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4" novalidate>
       <div>
         <label for="email" class="pms-label">Email</label>
-        <input id="email" type="email" [value]="email() ?? ''" readonly autocomplete="username" class="pms-input bg-gray-50" />
+        <input id="email" type="email" [value]="email() ?? ''" readonly autocomplete="username" class="pms-input bg-surface-alt" />
       </div>
       <div>
         <label for="password" class="pms-label">Password</label>

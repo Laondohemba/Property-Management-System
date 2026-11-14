@@ -12,6 +12,7 @@
         "php": "^8.3",
         "laravel/fortify": "^1.42",
         "laravel/framework": "^13.17",
+        "laravel/horizon": "^5.51",
         "laravel/sanctum": "^4.4",
         "laravel/tinker": "^3.0",
         "predis/predis": "^3.7",
@@ -105,6 +106,10 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "ext-pcntl": "8.3",
+            "ext-posix": "8.3"
         }
     },
     "minimum-stability": "stable",

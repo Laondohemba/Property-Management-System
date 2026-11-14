@@ -3,29 +3,155 @@
 @plugin '@tailwindcss/forms';
 
 /*
- * Design tokens derived from the NiceAdmin reference UI (specifications/NiceAdmin).
- * Utilities: bg-primary, text-navy, text-muted, bg-page, shadow-card, font-heading, font-display ...
+ * Light and dark theme.
+ *
+ * Colours are semantic tokens (surface, heading, body, line, status colours) whose values switch
+ * with the theme, so templates never hard-code light colours. The theme follows the operating
+ * system by default; ThemeService sets data-theme="light|dark" on <html> when the user picks one
+ * (and always once the app has started, so the `dark:` variant also works).
+ *
+ * Light values come from the NiceAdmin reference UI (specifications/NiceAdmin).
  */
-@theme {
+:root {
+  color-scheme: light;
+
+  --pms-page: #f6f9ff;
+  --pms-surface: #ffffff;
+  --pms-surface-alt: #f6f9ff;
+  --pms-heading: #012970;
+  --pms-body: #444444;
+  --pms-muted: #899bbd;
+  --pms-subtle: #aab7cf;
+  --pms-line: #ebeef4;
+  --pms-field-line: #dee2e6;
+  --pms-field-focus: #a0aaf8;
+
+  --pms-primary: #4154f1;
+  --pms-primary-hover: #2c3fd9;
+  --pms-primary-soft: #f6f9ff;
+  --pms-secondary: #6c757d;
+  --pms-danger: #dc3545;
+  --pms-danger-hover: #bb2d3b;
+  --pms-success: #198754;
+
+  --pms-success-soft: #d1e7dd;
+  --pms-success-fg: #0f5132;
+  --pms-success-line: #badbcc;
+  --pms-danger-soft: #f8d7da;
+  --pms-danger-fg: #842029;
+  --pms-danger-line: #f5c2c7;
+  --pms-info-soft: #cfe2ff;
+  --pms-info-fg: #084298;
+  --pms-warning-soft: #fff3cd;
+  --pms-warning-fg: #664d03;
+  --pms-neutral-soft: #e2e3e5;
+  --pms-neutral-fg: #41464b;
+  --pms-strong: #212529;
+  --pms-strong-fg: #ffffff;
+
+  --pms-shadow-card: 0 0 30px rgba(1, 41, 112, 0.1);
+  --pms-shadow-header: 0 2px 20px rgba(1, 41, 112, 0.1);
+  --pms-shadow-dropdown: 0 5px 30px rgba(82, 63, 105, 0.2);
+}
+
+/*
+ * Before Angular starts there is nothing on screen but the page background, so the OS
+ * preference only needs to colour that; ThemeService then sets data-theme on <html>.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --pms-page: #0e1322;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --pms-page: #0e1322;
+  --pms-surface: #161d30;
+  --pms-surface-alt: #1e2740;
+  --pms-heading: #e3e9ff;
+  --pms-body: #c3cae0;
+  --pms-muted: #8b97b8;
+  --pms-subtle: #5f6b8c;
+  --pms-line: #29324c;
+  --pms-field-line: #354061;
+  --pms-field-focus: #6b7bff;
+
+  --pms-primary: #6b7bff;
+  --pms-primary-hover: #8794ff;
+  --pms-primary-soft: #1e2740;
+  --pms-secondary: #9aa3b8;
+  --pms-danger: #e5545f;
+  --pms-danger-hover: #ee737c;
+  --pms-success: #3fbf86;
+
+  --pms-success-soft: #123528;
+  --pms-success-fg: #7fdcb2;
+  --pms-success-line: #1d5a42;
+  --pms-danger-soft: #3b1a20;
+  --pms-danger-fg: #f3a7ae;
+  --pms-danger-line: #6a2a34;
+  --pms-info-soft: #172a4f;
+  --pms-info-fg: #a3c6ff;
+  --pms-warning-soft: #3a3012;
+  --pms-warning-fg: #f2d47c;
+  --pms-neutral-soft: #2a3248;
+  --pms-neutral-fg: #bcc4d9;
+  --pms-strong: #e9ecef;
+  --pms-strong-fg: #111827;
+
+  --pms-shadow-card: 0 0 30px rgba(0, 0, 0, 0.35);
+  --pms-shadow-header: 0 2px 20px rgba(0, 0, 0, 0.45);
+  --pms-shadow-dropdown: 0 8px 30px rgba(0, 0, 0, 0.55);
+}
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* Utilities: bg-surface, text-heading, text-body, text-muted, border-line, bg-success-soft ... */
+@theme inline {
   --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Nunito', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Poppins', ui-sans-serif, system-ui, sans-serif;
 
-  --color-primary: #4154f1;
-  --color-primary-hover: #2c3fd9;
-  --color-primary-soft: #f6f9ff;
-  --color-navy: #012970;
-  --color-muted: #899bbd;
-  --color-subtle: #aab7cf;
-  --color-page: #f6f9ff;
-  --color-line: #ebeef4;
-  --color-body: #444444;
-  --color-danger: #dc3545;
-  --color-success: #198754;
+  --color-page: var(--pms-page);
+  --color-surface: var(--pms-surface);
+  --color-surface-alt: var(--pms-surface-alt);
+  --color-heading: var(--pms-heading);
+  --color-body: var(--pms-body);
+  --color-muted: var(--pms-muted);
+  --color-subtle: var(--pms-subtle);
+  --color-line: var(--pms-line);
+  --color-field-line: var(--pms-field-line);
+  --color-field-focus: var(--pms-field-focus);
 
-  --shadow-card: 0 0 30px rgba(1, 41, 112, 0.1);
-  --shadow-header: 0 2px 20px rgba(1, 41, 112, 0.1);
-  --shadow-dropdown: 0 5px 30px rgba(82, 63, 105, 0.2);
+  --color-primary: var(--pms-primary);
+  --color-primary-hover: var(--pms-primary-hover);
+  --color-primary-soft: var(--pms-primary-soft);
+  --color-secondary: var(--pms-secondary);
+  --color-danger: var(--pms-danger);
+  --color-danger-hover: var(--pms-danger-hover);
+  --color-success: var(--pms-success);
+
+  --color-success-soft: var(--pms-success-soft);
+  --color-success-fg: var(--pms-success-fg);
+  --color-success-line: var(--pms-success-line);
+  --color-danger-soft: var(--pms-danger-soft);
+  --color-danger-fg: var(--pms-danger-fg);
+  --color-danger-line: var(--pms-danger-line);
+  --color-info-soft: var(--pms-info-soft);
+  --color-info-fg: var(--pms-info-fg);
+  --color-warning-soft: var(--pms-warning-soft);
+  --color-warning-fg: var(--pms-warning-fg);
+  --color-neutral-soft: var(--pms-neutral-soft);
+  --color-neutral-fg: var(--pms-neutral-fg);
+  --color-strong: var(--pms-strong);
+  --color-strong-fg: var(--pms-strong-fg);
+
+  --shadow-card: var(--pms-shadow-card);
+  --shadow-header: var(--pms-shadow-header);
+  --shadow-dropdown: var(--pms-shadow-dropdown);
 
   --spacing-header: 60px;
   --spacing-sidebar: 300px;
@@ -38,6 +164,11 @@
 
   a {
     @apply text-primary;
+  }
+
+  /* Backdrop behind modals (ConfirmService and future dialogs). */
+  .pms-dialog-backdrop {
+    background-color: rgb(1 9 30 / 0.45);
   }
 }
 
@@ -53,7 +184,7 @@
   }
 
   .pms-input {
-    @apply block w-full rounded border-[#dee2e6] text-sm text-body placeholder:text-subtle focus:border-[#a0aaf8] focus:ring-4 focus:ring-primary/25 disabled:bg-gray-100;
+    @apply block w-full rounded border-field-line bg-surface text-sm text-body placeholder:text-subtle focus:border-field-focus focus:ring-4 focus:ring-primary/25 disabled:bg-surface-alt;
   }
 
   .pms-input.is-invalid {
@@ -61,7 +192,7 @@
   }
 
   .pms-checkbox {
-    @apply rounded border-[#dee2e6] text-primary focus:ring-primary/25;
+    @apply rounded border-field-line bg-surface text-primary focus:ring-primary/25;
   }
 
   .pms-btn-primary {
@@ -69,27 +200,27 @@
   }
 
   .pms-btn-secondary {
-    @apply pms-btn border border-[#6c757d] bg-white text-[#6c757d] hover:bg-[#6c757d] hover:text-white focus:ring-gray-300;
+    @apply pms-btn border border-secondary bg-surface text-secondary hover:bg-secondary hover:text-surface focus:ring-secondary/30;
   }
 
   .pms-btn-danger {
-    @apply pms-btn bg-danger text-white hover:bg-[#bb2d3b] focus:ring-red-300;
+    @apply pms-btn bg-danger text-white hover:bg-danger-hover focus:ring-danger/30;
   }
 
   .pms-card {
-    @apply mb-[30px] rounded-[5px] bg-white px-5 pb-5 shadow-card;
+    @apply mb-[30px] rounded-[5px] bg-surface px-5 pb-5 shadow-card;
   }
 
   .pms-card-title {
-    @apply pt-5 pb-[15px] font-display text-lg font-medium text-navy;
+    @apply pt-5 pb-[15px] font-display text-lg font-medium text-heading;
   }
 
   .pms-alert-success {
-    @apply rounded border border-[#badbcc] bg-[#d1e7dd] px-4 py-3 text-sm text-[#0f5132];
+    @apply rounded border border-success-line bg-success-soft px-4 py-3 text-sm text-success-fg;
   }
 
   .pms-alert-danger {
-    @apply rounded border border-[#f5c2c7] bg-[#f8d7da] px-4 py-3 text-sm text-[#842029];
+    @apply rounded border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger-fg;
   }
 
   .pms-field-error {

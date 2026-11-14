@@ -1,0 +1,15 @@
+# Release Job, applied on its own before the rollout (spec §3.6, DEP-08).
+# Overlays add the namespace and the same immutable image tag as the workloads.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: pms
+      app.kubernetes.io/part-of: pms
+    includeSelectors: false
+
+resources:
+  - migrate-job.yaml
+
+# The container image is named "pms" here; overlays set the registry and an immutable tag.

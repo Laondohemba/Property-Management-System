@@ -2,7 +2,7 @@
 
 <section class="pms-card">
   <div class="flex flex-wrap items-center justify-between gap-3 pt-5 pb-4">
-    <h2 class="font-display text-lg font-medium text-navy">
+    <h2 class="font-display text-lg font-medium text-heading">
       {{ session.isSuperAdmin() ? 'Whole organisation' : session.activeProperty()?.name }}
       <span class="text-sm font-normal text-muted">| {{ meta()?.total ?? 0 }} entries</span>
     </h2>
@@ -38,7 +38,7 @@
 
   <div class="overflow-x-auto">
     <table class="w-full text-left text-sm">
-      <thead class="border-b-2 border-line text-navy">
+      <thead class="border-b-2 border-line text-heading">
         <tr>
           <th scope="col" class="px-3 py-2 font-semibold">When</th>
           <th scope="col" class="px-3 py-2 font-semibold">Who</th>
@@ -53,7 +53,7 @@
             <td class="px-3 py-3 whitespace-nowrap">{{ entry.created_at | date: 'medium' }}</td>
             <td class="px-3 py-3">
               @if (entry.causer; as causer) {
-                <span class="font-semibold text-navy">{{ causer.name }}</span>
+                <span class="font-semibold text-heading">{{ causer.name }}</span>
                 <span class="block text-xs text-muted">{{ causer.email }}</span>
               } @else {
                 <span class="text-muted">System / anonymous</span>
@@ -89,16 +89,16 @@
                     <tbody>
                       @for (change of changes(entry); track change.field) {
                         <tr>
-                          <td class="py-1 pr-4 font-mono text-xs text-navy">{{ change.field }}</td>
-                          <td class="py-1 pr-4 text-[#842029]">{{ format(change.before) }}</td>
-                          <td class="py-1 text-[#0f5132]">{{ format(change.after) }}</td>
+                          <td class="py-1 pr-4 font-mono text-xs text-heading">{{ change.field }}</td>
+                          <td class="py-1 pr-4 text-danger-fg">{{ format(change.before) }}</td>
+                          <td class="py-1 text-success-fg">{{ format(change.after) }}</td>
                         </tr>
                       }
                     </tbody>
                   </table>
                 }
                 @if (hasDetails(entry)) {
-                  <pre class="mb-3 max-w-3xl overflow-x-auto rounded bg-white p-3 text-xs text-navy">{{ entry.details | json }}</pre>
+                  <pre class="mb-3 max-w-3xl overflow-x-auto rounded bg-surface p-3 text-xs text-heading">{{ entry.details | json }}</pre>
                 }
                 <dl class="grid max-w-3xl gap-1 text-xs text-muted sm:grid-cols-2">
                   @if (entry.subject; as subject) {

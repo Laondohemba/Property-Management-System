@@ -14,7 +14,7 @@ import { FieldError } from '../../shared/ui/field-error';
   imports: [ReactiveFormsModule, RouterLink, FieldError],
   template: `
     <div class="pt-6 pb-4">
-      <h1 class="text-center font-display text-2xl font-medium text-navy">Login to Your Account</h1>
+      <h1 class="text-center font-display text-2xl font-medium text-heading">Login to Your Account</h1>
       <p class="mt-1 text-center text-sm">Enter your email &amp; password to login</p>
     </div>
 

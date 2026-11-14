@@ -1,0 +1,61 @@
+# Applies expand-phase migrations once per release, before any pod is rolled (spec §3.6, §4).
+# --isolated takes a Redis lock so two concurrent runs can never collide. Application pods
+# never migrate on start-up.
+#
+# Jobs are immutable: delete the previous run before applying (see k8s/README.md).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pms-release
+  labels:
+    app.kubernetes.io/component: release
+spec:
+  # A failed migration needs a person, not an automatic retry.
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pms
+        app.kubernetes.io/component: release
+    spec:
+      restartPolicy: Never
+      serviceAccountName: pms
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 82
+        runAsGroup: 82
+        fsGroup: 82
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: pms
+          args: ["php", "artisan", "migrate", "--force", "--isolated"]
+          envFrom:
+            - configMapRef:
+                name: pms-config
+            - secretRef:
+                name: pms-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: storage, mountPath: /var/www/html/storage }
+            - { name: bootstrap-cache, mountPath: /var/www/html/bootstrap/cache }
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 256Mi } }
+        - { name: storage, emptyDir: { sizeLimit: 256Mi } }
+        - { name: bootstrap-cache, emptyDir: { sizeLimit: 16Mi } }

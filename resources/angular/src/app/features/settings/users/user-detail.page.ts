@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 
 import { toProblem } from '../../../core/bff/problem';
 import { StaffOptions, StaffUser } from '../../../core/bff/types';
+import { ConfirmService } from '../../../shared/ui/confirm-dialog';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { StatusBadge } from '../../../shared/ui/status-badge';
 import { StaffApi, StaffResult } from './staff.api';
@@ -23,6 +24,7 @@ export class UserDetailPage implements OnInit {
   readonly notice = input<string>();
 
   private readonly api = inject(StaffApi);
+  private readonly confirm = inject(ConfirmService);
 
   protected readonly user = signal<StaffUser | null>(null);
   protected readonly options = signal<StaffOptions | null>(null);
@@ -50,8 +52,15 @@ export class UserDetailPage implements OnInit {
     this.run(this.api.assign(this.id(), propertyId, role), 'Role updated.');
   }
 
-  protected removeAccess(propertyId: string, propertyName: string): void {
-    if (confirm(`Remove ${this.user()?.name}'s access to ${propertyName}?`)) {
+  protected async removeAccess(propertyId: string, propertyName: string): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: 'Remove property access',
+      message: `${this.user()?.name} will no longer be able to work in ${propertyName}.`,
+      confirmLabel: 'Remove access',
+      tone: 'danger',
+    });
+
+    if (confirmed) {
       this.run(this.api.unassign(this.id(), propertyId), 'Access removed.');
     }
   }
@@ -62,18 +71,42 @@ export class UserDetailPage implements OnInit {
     }
   }
 
-  protected setActive(active: boolean): void {
-    const verb = active ? 'Reactivate' : 'Deactivate';
-    if (confirm(`${verb} ${this.user()?.name}? ${active ? '' : 'They will be signed out immediately.'}`)) {
+  protected async setActive(active: boolean): Promise<void> {
+    const name = this.user()?.name;
+    const confirmed = await this.confirm.ask(
+      active
+        ? { title: 'Reactivate account', message: `${name} will be able to sign in again.`, confirmLabel: 'Reactivate' }
+        : {
+            title: 'Deactivate account',
+            message: `${name} will be signed out immediately and won't be able to sign in until reactivated.`,
+            confirmLabel: 'Deactivate',
+            tone: 'danger',
+          },
+    );
+
+    if (confirmed) {
       this.run(this.api.updateAccount(this.id(), { is_active: active }), active ? 'Account reactivated.' : 'Account deactivated.');
     }
   }
 
-  protected setSuperAdmin(superAdmin: boolean): void {
-    const text = superAdmin
-      ? `Make ${this.user()?.name} a Super Admin? They will manage the whole organisation.`
-      : `Remove ${this.user()?.name}'s Super Admin role?`;
-    if (confirm(text)) {
+  protected async setSuperAdmin(superAdmin: boolean): Promise<void> {
+    const name = this.user()?.name;
+    const confirmed = await this.confirm.ask(
+      superAdmin
+        ? {
+            title: 'Make Super Admin',
+            message: `${name} will be able to manage the whole organisation: every property, all staff, roles and permissions.`,
+            confirmLabel: 'Make Super Admin',
+          }
+        : {
+            title: 'Remove Super Admin',
+            message: `${name} will keep only the roles they hold at individual properties.`,
+            confirmLabel: 'Remove Super Admin',
+            tone: 'danger',
+          },
+    );
+
+    if (confirmed) {
       this.run(this.api.updateAccount(this.id(), { is_super_admin: superAdmin }), 'Super Admin role updated.');
     }
   }

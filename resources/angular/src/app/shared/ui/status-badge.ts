@@ -2,16 +2,16 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 /** Colours follow the NiceAdmin badge palette; unknown values fall back to grey. */
 const TONES: Record<string, string> = {
-  clean: 'bg-[#d1e7dd] text-[#0f5132]',
-  inspected: 'bg-[#cfe2ff] text-[#084298]',
-  cleaning: 'bg-[#fff3cd] text-[#664d03]',
-  dirty: 'bg-[#f8d7da] text-[#842029]',
-  out_of_order: 'bg-[#212529] text-white',
-  out_of_service: 'bg-[#e2e3e5] text-[#41464b]',
-  occupied: 'bg-[#cfe2ff] text-[#084298]',
-  vacant: 'bg-[#e2e3e5] text-[#41464b]',
-  active: 'bg-[#d1e7dd] text-[#0f5132]',
-  inactive: 'bg-[#e2e3e5] text-[#41464b]',
+  clean: 'bg-success-soft text-success-fg',
+  inspected: 'bg-info-soft text-info-fg',
+  cleaning: 'bg-warning-soft text-warning-fg',
+  dirty: 'bg-danger-soft text-danger-fg',
+  out_of_order: 'bg-strong text-strong-fg',
+  out_of_service: 'bg-neutral-soft text-neutral-fg',
+  occupied: 'bg-info-soft text-info-fg',
+  vacant: 'bg-neutral-soft text-neutral-fg',
+  active: 'bg-success-soft text-success-fg',
+  inactive: 'bg-neutral-soft text-neutral-fg',
 };
 
 @Component({

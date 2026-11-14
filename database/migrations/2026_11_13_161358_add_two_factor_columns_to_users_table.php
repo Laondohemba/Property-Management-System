@@ -4,6 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Adds nullable two-factor columns to users (Fortify).
+ *
+ * @migration expand
+ */
 return new class extends Migration
 {
     /**
