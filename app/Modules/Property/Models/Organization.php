@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Tenant root (spec §2.7). Every business table carries organization_id.
@@ -22,7 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids, LogsActivity, SoftDeletes;
 
     /**
      * Mirror the database defaults so freshly created instances behave the same.
@@ -95,5 +97,18 @@ class Organization extends Model
             'is_active' => 'boolean',
             'settings' => 'array',
         ];
+    }
+
+    /**
+     * Audit trail (spec §5.12, AUD-01): before/after values of the listed attributes only.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('data')
+            ->logOnly(['name', 'slug', 'is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $event): string => "Organisation {$this->name} {$event}");
     }
 }

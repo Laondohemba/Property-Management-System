@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard, twoFactorEnrollmentGuard } from './core/auth/guards';
+import { authGuard, guestGuard, permissionGuard, twoFactorEnrollmentGuard } from './core/auth/guards';
 
 /** Feature routes are lazy-loaded per module (spec §11.1). */
 export const routes: Routes = [
@@ -21,6 +21,12 @@ export const routes: Routes = [
         path: 'dashboard',
         title: 'Dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.page').then((m) => m.DashboardPage),
+      },
+      {
+        path: 'audit',
+        title: 'Audit log',
+        canActivate: [permissionGuard((session) => session.isSuperAdmin() || session.can('audit.view'))],
+        loadComponent: () => import('./features/audit/audit-log.page').then((m) => m.AuditLogPage),
       },
       {
         path: 'settings',

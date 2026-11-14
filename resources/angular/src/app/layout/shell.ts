@@ -60,8 +60,14 @@ export class Shell {
       settings.push({ label: 'Roles & Permissions', icon: 'key', link: '/settings/roles' });
     }
 
+    const main: NavItem[] = [{ label: 'Dashboard', icon: 'grid', link: '/dashboard' }];
+
+    if (this.session.isSuperAdmin() || this.session.permissions().has('audit.view')) {
+      main.push({ label: 'Audit Log', icon: 'clock', link: '/audit' });
+    }
+
     return [
-      { items: [{ label: 'Dashboard', icon: 'grid', link: '/dashboard' }] },
+      { items: main },
       ...(settings.length ? [{ heading: 'Settings', items: settings }] : []),
       { heading: 'Account', items: [{ label: 'Profile', icon: 'user', link: '/account/profile' }] },
     ];

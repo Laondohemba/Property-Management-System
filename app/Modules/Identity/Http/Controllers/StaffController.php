@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Audit\Audit;
 use App\Modules\Identity\Actions\InviteUser;
 use App\Modules\Identity\Actions\SendInvitation;
 use App\Modules\Identity\DTOs\StaffListMetaData;
@@ -107,12 +108,27 @@ class StaffController extends Controller
             throw ValidationException::withMessages(['is_active' => 'You cannot deactivate yourself or remove your own Super Admin role.']);
         }
 
+        $wasActive = $user->is_active;
         $user->fill(array_intersect_key($validated, array_flip(['name', 'is_active'])))->save();
 
-        if (array_key_exists('is_super_admin', $validated)) {
+        if ($wasActive !== $user->is_active) {
+            Audit::security(
+                $user->is_active ? 'account_reactivated' : 'account_deactivated',
+                ($user->is_active ? 'Reactivated' : 'Deactivated')." the account of {$user->email}",
+                $user,
+            );
+        }
+
+        if (array_key_exists('is_super_admin', $validated) && $validated['is_super_admin'] !== $user->isSuperAdmin()) {
             $validated['is_super_admin']
                 ? $user->assignRole(RoleEnum::SuperAdmin->value)
                 : $user->removeRole(RoleEnum::SuperAdmin->value);
+
+            Audit::security(
+                $validated['is_super_admin'] ? 'super_admin_granted' : 'super_admin_revoked',
+                ($validated['is_super_admin'] ? 'Granted' : 'Removed')." Super Admin for {$user->email}",
+                $user,
+            );
         }
 
         return $this->userResponse($request, $user->refresh());
@@ -132,8 +148,19 @@ class StaffController extends Controller
             )],
         ]);
 
-        $roleId = Role::query()->visibleTo((int) $request->user()->organization_id)->where('name', $validated['role'])->value('id');
-        $user->properties()->syncWithoutDetaching([$property->id => ['role_id' => $roleId]]);
+        $role = Role::query()->visibleTo((int) $request->user()->organization_id)->where('name', $validated['role'])->firstOrFail();
+        $previous = $user->roleForProperty($property);
+        $user->properties()->syncWithoutDetaching([$property->id => ['role_id' => $role->id]]);
+
+        if ($previous?->id !== $role->id) {
+            Audit::security(
+                $previous ? 'role_changed' : 'access_granted',
+                "{$user->email} is now {$role->displayLabel()} at {$property->name}",
+                $user,
+                ['role' => $role->name, 'previous_role' => $previous?->name],
+                property: $property,
+            );
+        }
 
         return $this->userResponse($request, $user);
     }
@@ -146,7 +173,17 @@ class StaffController extends Controller
         $this->ensureSameOrganization($request, $user);
         Gate::authorize('manageAccess', [$user, $property]);
 
-        $user->properties()->detach($property->id);
+        $previous = $user->roleForProperty($property);
+
+        if ($user->properties()->detach($property->id) > 0) {
+            Audit::security(
+                'access_revoked',
+                "Removed {$user->email}'s access to {$property->name}",
+                $user,
+                ['previous_role' => $previous?->name],
+                property: $property,
+            );
+        }
 
         return $this->userResponse($request, $user);
     }

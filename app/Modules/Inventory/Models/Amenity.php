@@ -12,13 +12,15 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 #[Fillable(['organization_id', 'property_id', 'name'])]
 #[UseFactory(AmenityFactory::class)]
 class Amenity extends Model
 {
     /** @use HasFactory<AmenityFactory> */
-    use BelongsToProperty, HasFactory, HasUlids;
+    use BelongsToProperty, HasFactory, HasUlids, LogsActivity;
 
     /**
      * @return list<string>
@@ -39,5 +41,18 @@ class Amenity extends Model
     public function roomTypes(): BelongsToMany
     {
         return $this->belongsToMany(RoomType::class);
+    }
+
+    /**
+     * Audit trail (spec §5.12, AUD-01): before/after values of the listed attributes only.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('data')
+            ->logOnly(['name'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $event): string => "Amenity {$this->name} {$event}");
     }
 }

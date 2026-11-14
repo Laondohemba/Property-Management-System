@@ -15,14 +15,14 @@ Platform, security and setup that every later module builds on.
 | 0.3 | **Rooms and room types.** Room types with capacity, bed configuration and amenities; rooms with floors, sort order, bulk range creation and housekeeping/occupancy status fields; amenity catalogue; dashboard room counts | ✅ |
 | 0.4 | **Users and roles administration.** Staff invitations with set-password links, activate/deactivate, Super Admin management, roles per property, custom roles with a permission matrix editor, 2FA enforceable by role | ✅ |
 | 0.5 | **Generated BFF types.** Every BFF response is a typed DTO; TypeScript types are generated from them (`composer types`) and a backend test fails on drift | ✅ |
-| 0.6 | **Audit logging base.** Activity log for data changes and security events | ⬜ |
+| 0.6 | **Audit logging base.** Who/what/when/where with before/after values for settings, users and roles; security events (sign-ins, failures, lockouts, 2FA, passwords, invitations, permission changes); append-only, hash-chained trail with `audit:verify`; basic read-only viewer | ✅ |
 | 0.7 | **Quality gates.** Architecture tests for module boundaries, static analysis, linting, CI pipeline | ⬜ |
 | 0.8 | **Containers and Kubernetes.** Multi-stage image, Nginx + PHP-FPM, web/worker/scheduler roles, Horizon, release job, zero-downtime rollout | ⬜ |
 | 0.9 | **Media storage.** S3-compatible file storage and room-type images | ⬜ |
 
 ## Phase 1: MVP (core PMS) ⬜
 
-Inventory and basic rates/restrictions, availability search, reservation lifecycle, tape-chart calendar, guest profiles, check-in/out, folios and charges, one payment gateway, invoices, night audit, housekeeping (with mobile view), basic work orders, standard reports and dashboard, notifications, audit viewer.
+Inventory and basic rates/restrictions, availability search, full audit viewer with export and the financial audit log (AUD-02/03), reservation lifecycle, tape-chart calendar, guest profiles, check-in/out, folios and charges, one payment gateway, invoices, night audit, housekeeping (with mobile view), basic work orders, standard reports and dashboard, notifications, audit viewer.
 
 ## Phase 2: Distribution and automation ⬜
 

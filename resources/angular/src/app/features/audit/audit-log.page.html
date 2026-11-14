@@ -1,0 +1,122 @@
+<pms-page-title title="Audit Log" [breadcrumbs]="[{ label: 'Audit Log' }]" />
+
+<section class="pms-card">
+  <div class="flex flex-wrap items-center justify-between gap-3 pt-5 pb-4">
+    <h2 class="font-display text-lg font-medium text-navy">
+      {{ session.isSuperAdmin() ? 'Whole organisation' : session.activeProperty()?.name }}
+      <span class="text-sm font-normal text-muted">| {{ meta()?.total ?? 0 }} entries</span>
+    </h2>
+    <p class="text-xs text-muted">Entries are append-only and hash-chained; they can't be edited or deleted.</p>
+  </div>
+
+  <form [formGroup]="filters" class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="search" aria-label="Filter audit log">
+    <div>
+      <label for="audit_search" class="sr-only">Search</label>
+      <input id="audit_search" type="search" formControlName="search" placeholder="Search descriptions" class="pms-input" />
+    </div>
+    <div>
+      <label for="audit_log" class="sr-only">Type</label>
+      <select id="audit_log" formControlName="log" class="pms-input">
+        <option value="">All activity</option>
+        <option value="data">Data changes</option>
+        <option value="security">Security events</option>
+      </select>
+    </div>
+    <div>
+      <label for="audit_from" class="sr-only">From</label>
+      <input id="audit_from" type="date" formControlName="from" class="pms-input" aria-label="From date" />
+    </div>
+    <div>
+      <label for="audit_to" class="sr-only">To</label>
+      <input id="audit_to" type="date" formControlName="to" class="pms-input" aria-label="To date" />
+    </div>
+  </form>
+
+  @if (error(); as message) {
+    <div class="pms-alert-danger mb-4" role="alert">{{ message }}</div>
+  }
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="border-b-2 border-line text-navy">
+        <tr>
+          <th scope="col" class="px-3 py-2 font-semibold">When</th>
+          <th scope="col" class="px-3 py-2 font-semibold">Who</th>
+          <th scope="col" class="px-3 py-2 font-semibold">What</th>
+          <th scope="col" class="px-3 py-2 font-semibold">Where</th>
+          <th scope="col" class="px-3 py-2"><span class="sr-only">Details</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of entries(); track entry.id) {
+          <tr class="border-b border-line hover:bg-primary-soft">
+            <td class="px-3 py-3 whitespace-nowrap">{{ entry.created_at | date: 'medium' }}</td>
+            <td class="px-3 py-3">
+              @if (entry.causer; as causer) {
+                <span class="font-semibold text-navy">{{ causer.name }}</span>
+                <span class="block text-xs text-muted">{{ causer.email }}</span>
+              } @else {
+                <span class="text-muted">System / anonymous</span>
+              }
+            </td>
+            <td class="px-3 py-3">
+              <span class="mr-2">
+                <pms-status-badge [value]="entry.log === 'security' ? 'dirty' : 'inspected'" [label]="entry.log === 'security' ? 'Security' : 'Data'" />
+              </span>
+              {{ entry.description }}
+            </td>
+            <td class="px-3 py-3">
+              {{ entry.property?.name ?? 'Organisation' }}
+              @if (entry.ip_address) {
+                <span class="block text-xs text-muted">{{ entry.ip_address }}</span>
+              }
+            </td>
+            <td class="px-3 py-3 text-right">
+              <button type="button" class="cursor-pointer text-sm font-semibold text-primary hover:underline" (click)="toggle(entry.id)"
+                      [attr.aria-expanded]="expanded() === entry.id">
+                {{ expanded() === entry.id ? 'Hide' : 'Details' }}
+              </button>
+            </td>
+          </tr>
+          @if (expanded() === entry.id) {
+            <tr class="border-b border-line bg-page">
+              <td colspan="5" class="px-3 py-4">
+                @if (changes(entry).length) {
+                  <table class="mb-3 w-full max-w-3xl text-sm">
+                    <thead class="text-left text-muted">
+                      <tr><th class="py-1 pr-4 font-semibold">Field</th><th class="py-1 pr-4 font-semibold">Before</th><th class="py-1 font-semibold">After</th></tr>
+                    </thead>
+                    <tbody>
+                      @for (change of changes(entry); track change.field) {
+                        <tr>
+                          <td class="py-1 pr-4 font-mono text-xs text-navy">{{ change.field }}</td>
+                          <td class="py-1 pr-4 text-[#842029]">{{ format(change.before) }}</td>
+                          <td class="py-1 text-[#0f5132]">{{ format(change.after) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+                @if (hasDetails(entry)) {
+                  <pre class="mb-3 max-w-3xl overflow-x-auto rounded bg-white p-3 text-xs text-navy">{{ entry.details | json }}</pre>
+                }
+                <dl class="grid max-w-3xl gap-1 text-xs text-muted sm:grid-cols-2">
+                  @if (entry.subject; as subject) {
+                    <div><dt class="inline font-semibold">Record:</dt> <dd class="ml-1 inline">{{ subject.type }} · {{ subject.label ?? subject.id ?? 'deleted' }}</dd></div>
+                  }
+                  <div><dt class="inline font-semibold">Event:</dt> <dd class="ml-1 inline">{{ entry.event ?? '—' }}</dd></div>
+                  <div class="sm:col-span-2"><dt class="inline font-semibold">Device:</dt> <dd class="ml-1 inline">{{ entry.user_agent ?? '—' }}</dd></div>
+                  <div class="sm:col-span-2 break-all"><dt class="inline font-semibold">Chain hash:</dt> <dd class="ml-1 inline font-mono">{{ entry.id }}</dd></div>
+                </dl>
+              </td>
+            </tr>
+          }
+        } @empty {
+          <tr><td colspan="5" class="px-3 py-8 text-center text-muted">{{ loading() ? 'Loading…' : 'No entries match.' }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <pms-pagination [meta]="meta()" (pageChange)="page$.next($event)" />
+</section>

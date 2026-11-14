@@ -8,6 +8,32 @@ name: string,
 label: string,
 is_system: boolean,
 };
+export type AuditActorData = {
+id: string,
+name: string,
+email: string,
+};
+export type AuditEntryData = {
+id: string,
+log: AuditLog,
+event: string | null,
+description: string,
+causer: AuditActorData | null,
+subject: AuditSubjectData | null,
+property: PropertyRefData | null,
+old: Record<string, any> | null,
+new: Record<string, any> | null,
+details: Record<string, any>,
+ip_address: string | null,
+user_agent: string | null,
+created_at: string,
+};
+export type AuditLog = 'data' | 'security';
+export type AuditSubjectData = {
+type: string,
+id: string | null,
+label: string | null,
+};
 export type BedData = {
 type: BedType,
 label: string,

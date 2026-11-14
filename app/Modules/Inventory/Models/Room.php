@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * A physical room (SYS-04).
@@ -27,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Room extends Model
 {
     /** @use HasFactory<RoomFactory> */
-    use BelongsToProperty, HasFactory, HasUlids, SoftDeletes;
+    use BelongsToProperty, HasFactory, HasUlids, LogsActivity, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -71,5 +73,18 @@ class Room extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Audit trail (spec §5.12, AUD-01): before/after values of the listed attributes only.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('data')
+            ->logOnly(['number', 'room_type_id', 'floor', 'notes', 'housekeeping_status', 'occupancy_status', 'sort_order', 'is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $event): string => "Room {$this->number} {$event}");
     }
 }

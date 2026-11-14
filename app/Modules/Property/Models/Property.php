@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * A hotel or other venue within an organisation (spec §2.7, SYS-03).
@@ -30,7 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Property extends Model
 {
     /** @use HasFactory<PropertyFactory> */
-    use BelongsToOrganization, HasFactory, HasUlids, SoftDeletes;
+    use BelongsToOrganization, HasFactory, HasUlids, LogsActivity, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -74,5 +76,18 @@ class Property extends Model
             'settings' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Audit trail (spec §5.12, AUD-01): before/after values of the listed attributes only.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('data')
+            ->logOnly(['name', 'code', 'timezone', 'currency', 'business_date', 'check_in_time', 'check_out_time', 'email', 'phone', 'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country', 'settings', 'is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $event): string => "Property {$this->name} {$event}");
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Actions;
 
+use App\Modules\Audit\Audit;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\User;
 use App\Modules\Property\Models\Property;
@@ -46,6 +47,15 @@ class InviteUser
             ]);
 
             $property->users()->attach($user->id, ['role_id' => $role->id]);
+
+            Audit::security(
+                'access_granted',
+                "{$user->email} is now {$role->displayLabel()} at {$property->name}",
+                $user,
+                ['role' => $role->name, 'previous_role' => null],
+                $actor,
+                $property,
+            );
 
             if ($existing === null) {
                 $this->sendInvitation->handle($user, $actor);

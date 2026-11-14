@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Modules\Audit\Listeners\RecordSecurityEvents;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Models\User;
 use App\Support\PropertyContext;
@@ -67,6 +68,8 @@ class AppServiceProvider extends ServiceProvider
         // Default BFF limit: 120 requests/minute per user, or per IP for guests (spec §8.1).
         RateLimiter::for('bff', fn (Request $request) => Limit::perMinute(120)
             ->by($request->user()?->getAuthIdentifier() ?: $request->ip()));
+
+        Event::subscribe(RecordSecurityEvents::class);
 
         Event::listen(function (Login $event): void {
             if ($event->user instanceof User) {

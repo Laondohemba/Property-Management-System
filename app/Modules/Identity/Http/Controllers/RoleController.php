@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Audit\Audit;
 use App\Modules\Identity\DTOs\PermissionGroupData;
 use App\Modules\Identity\DTOs\RoleData;
 use App\Modules\Identity\DTOs\RoleMetaData;
@@ -78,6 +79,11 @@ class RoleController extends Controller
                 $request->user()->organization->setTwoFactorRequired($role->name, true);
             }
 
+            Audit::security('role_created', "Created role {$role->displayLabel()}", $role, [
+                'permissions' => array_values($validated['permissions'] ?? []),
+                'requires_two_factor' => (bool) ($validated['requires_two_factor'] ?? false),
+            ]);
+
             return $role;
         });
 
@@ -100,6 +106,14 @@ class RoleController extends Controller
             : $this->validateRole($request, $model);
 
         DB::transaction(function () use ($request, $model, $validated): void {
+            $organization = $request->user()->organization;
+            $before = [
+                'label' => $model->displayLabel(),
+                'description' => $model->description,
+                'permissions' => $model->permissions()->pluck('name')->sort()->values()->all(),
+                'requires_two_factor' => in_array($model->name, $organization->twoFactorRoles(), true),
+            ];
+
             if (! $model->isSystem()) {
                 $model->fill(array_intersect_key($validated, array_flip(['label', 'description'])))->save();
 
@@ -109,7 +123,24 @@ class RoleController extends Controller
             }
 
             if (array_key_exists('requires_two_factor', $validated)) {
-                $request->user()->organization->setTwoFactorRequired($model->name, (bool) $validated['requires_two_factor']);
+                $organization->setTwoFactorRequired($model->name, (bool) $validated['requires_two_factor']);
+            }
+
+            $after = [
+                'label' => $model->displayLabel(),
+                'description' => $model->description,
+                'permissions' => $model->permissions()->pluck('name')->sort()->values()->all(),
+                'requires_two_factor' => in_array($model->name, $organization->twoFactorRoles(), true),
+            ];
+            $changed = array_keys(array_filter($after, fn (mixed $value, string $key): bool => $value !== $before[$key], ARRAY_FILTER_USE_BOTH));
+
+            if ($changed !== []) {
+                Audit::security('role_updated', "Updated role {$model->displayLabel()}", $model, [
+                    'old' => array_intersect_key($before, array_flip($changed)),
+                    'attributes' => array_intersect_key($after, array_flip($changed)),
+                    'permissions_added' => array_values(array_diff($after['permissions'], $before['permissions'])),
+                    'permissions_removed' => array_values(array_diff($before['permissions'], $after['permissions'])),
+                ]);
             }
         });
 
@@ -132,6 +163,11 @@ class RoleController extends Controller
         }
 
         DB::transaction(function () use ($request, $model): void {
+            Audit::security('role_deleted', "Deleted role {$model->displayLabel()}", null, [
+                'role' => $model->name,
+                'permissions' => $model->permissions()->pluck('name')->sort()->values()->all(),
+            ]);
+
             $request->user()->organization->setTwoFactorRequired($model->name, false);
             $model->delete();
         });

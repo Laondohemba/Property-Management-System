@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * A sellable category of rooms at a property (SYS-04).
@@ -26,7 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class RoomType extends Model
 {
     /** @use HasFactory<RoomTypeFactory> */
-    use BelongsToProperty, HasFactory, HasUlids, SoftDeletes;
+    use BelongsToProperty, HasFactory, HasUlids, LogsActivity, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -80,5 +82,18 @@ class RoomType extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Audit trail (spec §5.12, AUD-01): before/after values of the listed attributes only.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('data')
+            ->logOnly(['name', 'code', 'description', 'base_occupancy', 'max_adults', 'max_children', 'max_occupancy', 'bed_configuration', 'sort_order', 'is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn (string $event): string => "Room type {$this->code} {$event}");
     }
 }

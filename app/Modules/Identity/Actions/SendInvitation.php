@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Actions;
 
+use App\Modules\Audit\Audit;
 use App\Modules\Identity\Models\User;
 use App\Modules\Identity\Notifications\StaffInvitation;
 use Illuminate\Support\Facades\Password;
@@ -22,5 +23,7 @@ class SendInvitation
             $invitedBy->name,
             (string) $invitee->organization?->name,
         ));
+
+        Audit::security('invitation_sent', "Invitation e-mailed to {$invitee->email}", $invitee, [], $invitedBy);
     }
 }

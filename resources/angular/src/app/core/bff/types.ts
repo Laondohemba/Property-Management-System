@@ -29,6 +29,8 @@ import type {
 } from './generated/bff';
 
 export type {
+  AuditEntryData as AuditEntry,
+  AuditLog,
   BedType,
   BedTypeOptionData,
   DashboardData,

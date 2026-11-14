@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Audit\Audit;
 use App\Modules\Identity\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,8 @@ class AcceptInvitationController extends Controller
                 'email_verified_at' => $user->email_verified_at ?? now(),
                 'remember_token' => Str::random(60),
             ])->save();
+
+            Audit::security('invitation_accepted', "{$user->email} accepted their invitation", $user, [], $user);
         });
 
         if ($status !== Password::PASSWORD_RESET) {

@@ -23,6 +23,10 @@ import { Logo } from '../shared/ui/logo';
         </div>
 
         <p class="text-center text-[13px] text-navy">&copy; {{ year }} PMS</p>
+        <p class="mt-1 text-center text-xs text-muted">
+          Developed by <span class="font-semibold text-navy">Luper Aondohemba</span> ·
+          <a href="https://luper.dev" target="_blank" rel="noopener" class="font-semibold hover:underline">luper.dev</a>
+        </p>
       </div>
     </main>
   `,
