@@ -80,6 +80,20 @@ export const SETTINGS_ROUTES: Routes = [
     loadComponent: () => import('./rooms/amenities.page').then((m) => m.AmenitiesPage),
   },
 
+  // Taxes and fees (spec §2.8) and policies (RTE-07)
+  {
+    path: 'taxes',
+    title: 'Taxes & fees',
+    canActivate: [permissionGuard((session) => session.can('settings.taxes'))],
+    loadComponent: () => import('./pricing/taxes.page').then((m) => m.TaxesPage),
+  },
+  {
+    path: 'policies',
+    title: 'Policies',
+    canActivate: [permissionGuard((session) => session.can('settings.policies'))],
+    loadComponent: () => import('./pricing/policies.page').then((m) => m.PoliciesPage),
+  },
+
   // Staff and roles (SYS-01, SYS-02)
   {
     path: 'users',

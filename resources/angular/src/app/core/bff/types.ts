@@ -8,6 +8,27 @@
  */
 import type {
   AmenityData,
+  BalanceDue,
+  CancellationPolicyData,
+  DepositDue,
+  DepositPolicyData,
+  DepositType,
+  MealPlan,
+  OptionData,
+  PenaltyType,
+  PoliciesData,
+  PoliciesMetaData,
+  PolicyRefData,
+  PricePreviewData,
+  RatePlanData,
+  RatePlanOptionsData,
+  RatePlanPriceData,
+  RoomTypeOptionData,
+  TaxBreakdownData,
+  TaxCalculation,
+  TaxData,
+  TaxLineData,
+  TaxListMetaData,
   BedData,
   BedType,
   BlockType,
@@ -84,6 +105,22 @@ export type InventoryMeta = InventoryMetaData;
 export type InventoryBlock = InventoryBlockData;
 export type BlockTypeOption = BlockTypeOptionData;
 export type OverbookingResult = OverbookingResultData;
+export type Option = OptionData;
+export type Tax = TaxData;
+export type TaxListMeta = TaxListMetaData;
+export type TaxBreakdown = TaxBreakdownData;
+export type TaxLine = TaxLineData;
+export type CancellationPolicy = CancellationPolicyData;
+export type DepositPolicy = DepositPolicyData;
+export type Policies = PoliciesData;
+export type PoliciesMeta = PoliciesMetaData;
+export type PolicyRef = PolicyRefData;
+export type RatePlan = RatePlanData;
+export type RatePlanPrice = RatePlanPriceData;
+export type RatePlanOptions = RatePlanOptionsData;
+export type RoomTypeOption = RoomTypeOptionData;
+export type PricePreview = PricePreviewData;
+export type { BalanceDue, DepositDue, DepositType, MealPlan, PenaltyType, TaxCalculation };
 export type Room = RoomData;
 export type StaffAssignment = StaffAssignmentData;
 export type StaffUser = StaffUserData;
@@ -154,4 +191,70 @@ export interface OverbookingInput {
   allowance: number;
   /** ISO weekdays (1 = Monday … 7 = Sunday); null for every night. */
   weekdays: number[] | null;
+}
+
+export interface TaxInput {
+  name: string;
+  code: string;
+  calculation: TaxCalculation;
+  /** Percentage, e.g. "7.5"; only for percentage taxes. */
+  rate: string | null;
+  /** Minor units of the property currency; only for fixed fees. */
+  amount_minor: number | null;
+  is_inclusive: boolean;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface CancellationPolicyInput {
+  name: string;
+  free_cancellation_hours: number | null;
+  penalty_type: PenaltyType;
+  penalty_nights: number | null;
+  penalty_percent: string | null;
+  penalty_amount_minor: number | null;
+  no_show_type: PenaltyType;
+  no_show_nights: number | null;
+  no_show_percent: string | null;
+  no_show_amount_minor: number | null;
+  guest_text: string | null;
+  is_active: boolean;
+}
+
+export interface DepositPolicyInput {
+  name: string;
+  deposit_type: DepositType;
+  deposit_percent: string | null;
+  deposit_nights: number | null;
+  deposit_amount_minor: number | null;
+  deposit_due: DepositDue;
+  due_days_before_arrival: number | null;
+  requires_card_guarantee: boolean;
+  balance_due: BalanceDue;
+  guest_text: string | null;
+  is_active: boolean;
+}
+
+export interface RatePlanPriceInput {
+  room_type_id: string;
+  base_price_minor: number;
+  extra_adult_minor: number;
+  extra_child_minor: number;
+}
+
+export interface RatePlanInput {
+  name: string;
+  code: string;
+  description: string | null;
+  meal_plan: MealPlan;
+  cancellation_policy_id: string | null;
+  deposit_policy_id: string | null;
+  min_price_minor: number | null;
+  max_price_minor: number | null;
+  sort_order: number;
+  is_active: boolean;
+  tax_ids: string[];
+  prices: RatePlanPriceInput[];
+  /** Recorded with any price change (rate audit, RTE-09). */
+  change_reason: string | null;
 }

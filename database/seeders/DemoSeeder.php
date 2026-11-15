@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Modules\Billing\Enums\TaxCalculation;
+use App\Modules\Billing\Models\Tax;
 use App\Modules\Identity\Enums\Role as RoleEnum;
 use App\Modules\Identity\Models\User;
 use App\Modules\Inventory\Models\Amenity;
@@ -9,6 +11,14 @@ use App\Modules\Inventory\Models\Room;
 use App\Modules\Inventory\Models\RoomType;
 use App\Modules\Property\Models\Organization;
 use App\Modules\Property\Models\Property;
+use App\Modules\Rates\Enums\BalanceDue;
+use App\Modules\Rates\Enums\DepositDue;
+use App\Modules\Rates\Enums\DepositType;
+use App\Modules\Rates\Enums\MealPlan;
+use App\Modules\Rates\Enums\PenaltyType;
+use App\Modules\Rates\Models\CancellationPolicy;
+use App\Modules\Rates\Models\DepositPolicy;
+use App\Modules\Rates\Models\RatePlan;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 
@@ -45,6 +55,63 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->rooms($property);
+        $this->rates($property);
+    }
+
+    /**
+     * Nigerian taxes (VAT 7.5% included in prices, 10% service charge on top), two cancellation
+     * policies, two deposit policies and three rate plans. Prices in kobo.
+     */
+    private function rates(Property $property): void
+    {
+        $owned = ['organization_id' => $property->organization_id, 'property_id' => $property->id];
+
+        $vat = Tax::withoutGlobalScopes()->firstOrCreate([...$owned, 'code' => 'VAT'], [
+            'name' => 'VAT', 'calculation' => TaxCalculation::Percentage, 'rate' => '7.5', 'is_inclusive' => true, 'sort_order' => 1,
+        ]);
+        $service = Tax::withoutGlobalScopes()->firstOrCreate([...$owned, 'code' => 'SC'], [
+            'name' => 'Service charge', 'calculation' => TaxCalculation::Percentage, 'rate' => '10', 'is_inclusive' => false, 'sort_order' => 2,
+        ]);
+
+        $flexible = CancellationPolicy::withoutGlobalScopes()->firstOrCreate([...$owned, 'name' => 'Flexible'], [
+            'free_cancellation_hours' => 48, 'penalty_type' => PenaltyType::Nights, 'penalty_nights' => 1,
+            'no_show_type' => PenaltyType::Nights, 'no_show_nights' => 1,
+        ]);
+        $nonRefundable = CancellationPolicy::withoutGlobalScopes()->firstOrCreate([...$owned, 'name' => 'Non-refundable'], [
+            'free_cancellation_hours' => null, 'penalty_type' => PenaltyType::Percent, 'penalty_percent' => '100',
+            'no_show_type' => PenaltyType::Percent, 'no_show_percent' => '100',
+        ]);
+        $payAtHotel = DepositPolicy::withoutGlobalScopes()->firstOrCreate([...$owned, 'name' => 'Pay at hotel'], [
+            'deposit_type' => DepositType::None, 'deposit_due' => DepositDue::AtBooking, 'requires_card_guarantee' => true,
+            'balance_due' => BalanceDue::AtCheckOut,
+        ]);
+        $prepaid = DepositPolicy::withoutGlobalScopes()->firstOrCreate([...$owned, 'name' => 'Prepaid in full'], [
+            'deposit_type' => DepositType::Percent, 'deposit_percent' => '100', 'deposit_due' => DepositDue::AtBooking,
+            'balance_due' => BalanceDue::AtCheckIn,
+        ]);
+
+        $roomTypes = RoomType::withoutGlobalScopes()->where('property_id', $property->id)->pluck('id', 'code');
+        $plans = [
+            'BAR' => ['Best Available Rate', MealPlan::RoomOnly, $flexible, $payAtHotel, 0, ['STD' => 4500000, 'DLX' => 6500000, 'EXS' => 12000000]],
+            'BB' => ['Bed and Breakfast', MealPlan::Breakfast, $flexible, $payAtHotel, 1, ['STD' => 5200000, 'DLX' => 7200000, 'EXS' => 13000000]],
+            'NRF' => ['Non-refundable Saver', MealPlan::RoomOnly, $nonRefundable, $prepaid, 2, ['STD' => 3900000, 'DLX' => 5600000, 'EXS' => 10500000]],
+        ];
+
+        foreach ($plans as $code => [$name, $meal, $cancellation, $deposit, $sort, $prices]) {
+            $plan = RatePlan::withoutGlobalScopes()->firstOrCreate([...$owned, 'code' => $code], [
+                'name' => $name, 'meal_plan' => $meal, 'cancellation_policy_id' => $cancellation->id,
+                'deposit_policy_id' => $deposit->id, 'sort_order' => $sort,
+            ]);
+            $plan->taxes()->syncWithoutDetaching([$vat->id, $service->id]);
+
+            foreach ($prices as $typeCode => $base) {
+                if (isset($roomTypes[$typeCode])) {
+                    $plan->prices()->firstOrCreate(['room_type_id' => $roomTypes[$typeCode]], [
+                        'base_price_minor' => $base, 'extra_adult_minor' => 1000000, 'extra_child_minor' => 500000,
+                    ]);
+                }
+            }
+        }
     }
 
     /**

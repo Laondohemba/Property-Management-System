@@ -6,6 +6,7 @@ namespace App\Modules\Audit\DTOs;
 
 use App\Modules\Audit\Enums\AuditLog;
 use App\Modules\Audit\Models\AuditEntry;
+use App\Modules\Billing\Models\Tax;
 use App\Modules\Identity\DTOs\PropertyRefData;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\User;
@@ -15,6 +16,9 @@ use App\Modules\Inventory\Models\Room;
 use App\Modules\Inventory\Models\RoomType;
 use App\Modules\Property\Models\Organization;
 use App\Modules\Property\Models\Property;
+use App\Modules\Rates\Models\CancellationPolicy;
+use App\Modules\Rates\Models\DepositPolicy;
+use App\Modules\Rates\Models\RatePlan;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\LaravelData\Data;
 
@@ -79,7 +83,8 @@ class AuditEntryData extends Data
             $subject instanceof User => $subject->email,
             $subject instanceof Room => 'Room '.$subject->number,
             $subject instanceof InventoryBlock => $subject->type->label().' · '.$subject->from_date->toDateString().' to '.$subject->to_date->toDateString(),
-            $subject instanceof RoomType, $subject instanceof Property => $subject->name.' ('.$subject->code.')',
+            $subject instanceof RoomType, $subject instanceof Property, $subject instanceof RatePlan, $subject instanceof Tax => $subject->name.' ('.$subject->code.')',
+            $subject instanceof CancellationPolicy, $subject instanceof DepositPolicy => $subject->name,
             $subject instanceof Amenity, $subject instanceof Organization => $subject->name,
             $subject instanceof Role => $subject->displayLabel(),
             default => null,

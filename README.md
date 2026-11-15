@@ -2,7 +2,7 @@
 
 A web-based property management system for hotels and other hospitality venues, designed to grow into residential and commercial portfolios. It brings front office, reservations, inventory and rates, housekeeping, maintenance, billing and reporting together in one application.
 
-> **Status:** Phase 0 (Foundation) complete; Phase 1 (core PMS) in progress, starting with inventory. See the [roadmap](docs/ROADMAP.md) for what is built and what comes next.
+> **Status:** Phase 0 (Foundation) complete; Phase 1 (core PMS) in progress: inventory, rate plans, policies and taxes are done. See the [roadmap](docs/ROADMAP.md) for what is built and what comes next.
 
 ## Architecture
 
@@ -25,6 +25,7 @@ Key design choices:
 - **Generated API types.** Every BFF response is a typed DTO (spatie/laravel-data). `composer types` generates the matching TypeScript types into `resources/angular/src/app/core/bff/generated/bff.ts`, and a backend test fails if the committed file is out of date.
 - **Consistent errors.** Failures are returned as RFC 9457 `application/problem+json` with stable error codes and field-level validation errors.
 - **Modular domains.** Backend code lives in `app/Modules/*` (Identity, Property, Inventory, Reporting, …), with shared infrastructure in `app/Support`.
+- **Money without floats.** Amounts are integers in minor units (kobo, cents) with an ISO-4217 currency, calculated with brick/money. Taxes and fees are configured per property and per rate plan, inclusive or exclusive; nothing is hard-coded.
 - **Stateless pods, private media.** Uploaded files (such as room-type images) live on a private media disk: S3-compatible storage in deployed environments, the local disk in development (`MEDIA_DISK`). Browsers only ever receive signed, expiring URLs to resized WebP versions; originals and their metadata are never served. Image versions are built on the queue.
 - **One image, four roles.** The same container image runs as web pods (Nginx + PHP-FPM), Horizon queue workers, a single scheduler and, later, Reverb WebSockets. Migrations run once per release in a Kubernetes Job, and every schema change follows the expand/contract pattern so rollouts and rollbacks never break running pods. See [k8s/README.md](k8s/README.md).
 

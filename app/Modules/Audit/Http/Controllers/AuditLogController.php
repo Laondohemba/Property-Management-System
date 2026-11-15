@@ -7,6 +7,7 @@ namespace App\Modules\Audit\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Audit\DTOs\AuditEntryData;
 use App\Modules\Audit\Models\AuditEntry;
+use App\Modules\Billing\Models\Tax;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Models\User;
 use App\Modules\Inventory\Models\Amenity;
@@ -14,6 +15,9 @@ use App\Modules\Inventory\Models\InventoryBlock;
 use App\Modules\Inventory\Models\Room;
 use App\Modules\Inventory\Models\RoomType;
 use App\Modules\Property\Models\Property;
+use App\Modules\Rates\Models\CancellationPolicy;
+use App\Modules\Rates\Models\DepositPolicy;
+use App\Modules\Rates\Models\RatePlan;
 use App\Support\Http\Bff;
 use App\Support\Http\DTOs\PageMetaData;
 use App\Support\Http\Paginated;
@@ -93,6 +97,10 @@ class AuditLogController extends Controller
             'room_type' => RoomType::class,
             'room' => Room::class,
             'inventory_block' => InventoryBlock::class,
+            'rate_plan' => RatePlan::class,
+            'tax' => Tax::class,
+            'cancellation_policy' => CancellationPolicy::class,
+            'deposit_policy' => DepositPolicy::class,
             'amenity' => Amenity::class,
             'user' => User::class,
             default => null,

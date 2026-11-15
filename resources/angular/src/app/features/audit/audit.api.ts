@@ -4,7 +4,17 @@ import { Observable, map } from 'rxjs';
 
 import { AuditEntry, AuditLog, BffEnvelope, PageMeta } from '../../core/bff/types';
 
-export type AuditSubjectType = 'property' | 'room_type' | 'room' | 'amenity' | 'user';
+export type AuditSubjectType =
+  | 'property'
+  | 'room_type'
+  | 'room'
+  | 'amenity'
+  | 'user'
+  | 'inventory_block'
+  | 'rate_plan'
+  | 'tax'
+  | 'cancellation_policy'
+  | 'deposit_policy';
 
 export interface AuditFilters {
   page?: number;

@@ -29,6 +29,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/audit/audit-log.page').then((m) => m.AuditLogPage),
       },
       {
+        path: 'rate-plans',
+        canActivate: [permissionGuard((session) => session.can('rates.manage'))],
+        children: [
+          { path: '', title: 'Rate plans', loadComponent: () => import('./features/rates/rate-plan-list.page').then((m) => m.RatePlanListPage) },
+          { path: 'new', title: 'New rate plan', loadComponent: () => import('./features/rates/rate-plan-edit.page').then((m) => m.RatePlanEditPage) },
+          { path: ':id', title: 'Edit rate plan', loadComponent: () => import('./features/rates/rate-plan-edit.page').then((m) => m.RatePlanEditPage) },
+        ],
+      },
+      {
         path: 'inventory',
         title: 'Inventory',
         canActivate: [permissionGuard((session) => session.can('inventory.manage'))],

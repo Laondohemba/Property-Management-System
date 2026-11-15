@@ -27,14 +27,14 @@ One pilot property operating end to end (spec §16). Steps follow the order the 
 | Step | Scope | Status |
 |---|---|---|
 | 1.1 | **Inventory.** Master allotment per room type per night (`room_type_inventory`, CHN-01) with the spec's check constraint, kept in step with active rooms and two years ahead; room-type blocks and holds with reason and automatic expiry (CAL-06); overbooking allowance by date range and weekday; row locking in ascending date order (§6.3, §7.4); `Idempotency-Key` enforcement for POSTs with inventory or money effects (§8.1); inventory screen | ✅ |
-| 1.2 | **Rate plans, policies and taxes.** Rate plans with base price per room type, occupancy supplements and meal plan (RTE-01); cancellation, deposit and payment policies (RTE-07); taxes and charge codes | ⬜ |
+| 1.2 | **Rate plans, policies and taxes.** Taxes and fees per property: percentages (inclusive or exclusive) and fixed amounts per night, per stay or per guest night (§2.8); cancellation and no-show policies, deposit and payment policies with generated guest wording (RTE-07); rate plans with meal plan, policies, taxes, price limits and a base price plus extra-adult and extra-child supplements per room type (RTE-01); rate audit of every price change with reason (RTE-09); money as integer minor units via brick/money; price preview with full tax breakdown | ✅ |
 | 1.3 | **Rates and restrictions grid.** Daily overrides by range, weekday and season with bulk edit (RTE-02); min/max stay, closed, CTA, CTD, advance purchase (RTE-03); rate audit (RTE-09) | ⬜ |
 | 1.4 | **Availability search and quote.** Itemised nightly price with taxes, fees and policy text (RTE-10); the reservation stepper's options endpoint | ⬜ |
 | 1.5 | **Guest profiles.** Profiles, search, stay history, preferences, consent; encrypted ID fields (§5.3) | ⬜ |
 | 1.6 | **Reservations.** Create, modify, cancel with policy, no-show, tentative holds with expiry, overbooking-safe booking (RES-01 to RES-07) | ⬜ |
 | 1.7 | **Calendar.** Tape chart with virtual scrolling, drag to move or resize, filters, availability row, quick actions (CAL-01 to CAL-06, CAL-08) | ⬜ |
 | 1.8 | **Front desk.** Room assignment, check-in, check-out, room-level out of order (RES-07 to RES-09) | ⬜ |
-| 1.9 | **Billing.** Folios and charges, one payment gateway, invoices with gap-free numbering (§5.8, §5.9) | ⬜ |
+| 1.9 | **Billing.** Charge codes with tax and GL mapping (BIL-02), folios and charges, one payment gateway, invoices with gap-free numbering (§5.8, §5.9) | ⬜ |
 | 1.10 | **Night audit.** Scheduler pod plus worker fan-out, per property and business date, idempotent | ⬜ |
 | 1.11 | **Housekeeping.** Board by status and assignment, mobile attendant view (§5.6) | ⬜ |
 | 1.12 | **Work orders.** Basic maintenance with room blocking (§5.7) | ⬜ |

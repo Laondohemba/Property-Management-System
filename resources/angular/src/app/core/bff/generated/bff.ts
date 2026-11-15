@@ -38,6 +38,7 @@ type: string,
 id: string | null,
 label: string | null,
 };
+export type BalanceDue = 'at_check_in' | 'at_check_out';
 export type BedData = {
 type: BedType,
 label: string,
@@ -52,6 +53,24 @@ export type BlockType = 'out_of_order' | 'out_of_service' | 'owner' | 'hold';
 export type BlockTypeOptionData = {
 value: BlockType,
 label: string,
+};
+export type CancellationPolicyData = {
+id: string,
+name: string,
+free_cancellation_hours: number | null,
+penalty_type: PenaltyType,
+penalty_nights: number | null,
+penalty_percent: string | null,
+penalty_amount_minor: number | null,
+no_show_type: PenaltyType,
+no_show_nights: number | null,
+no_show_percent: string | null,
+no_show_amount_minor: number | null,
+guest_text: string | null,
+summary: string,
+is_active: boolean,
+rate_plans_count: number,
+stamps: RecordStampsData,
 };
 export type CursorPaginatedDataCollection<TKey, TValue> = CursorPaginator<TKey, TValue>;
 export type CursorPaginator<TKey, TValue> = {
@@ -92,6 +111,25 @@ key: string,
 label: string,
 value: number,
 };
+export type DepositDue = 'at_booking' | 'before_arrival';
+export type DepositPolicyData = {
+id: string,
+name: string,
+deposit_type: DepositType,
+deposit_percent: string | null,
+deposit_nights: number | null,
+deposit_amount_minor: number | null,
+deposit_due: DepositDue,
+due_days_before_arrival: number | null,
+requires_card_guarantee: boolean,
+balance_due: BalanceDue,
+guest_text: string | null,
+summary: string,
+is_active: boolean,
+rate_plans_count: number,
+stamps: RecordStampsData,
+};
+export type DepositType = 'none' | 'percent' | 'nights' | 'fixed';
 export type FieldErrorData = {
 field: string,
 message: string,
@@ -164,9 +202,14 @@ to: number | null,
 },
 };
 export type LengthAwarePaginatorInterface<TKey, TValue> = LengthAwarePaginator<TKey, TValue>;
+export type MealPlan = 'room_only' | 'breakfast' | 'half_board' | 'full_board' | 'all_inclusive';
 export type OccupancyStatus = 'vacant' | 'occupied';
 export type OccupancyStatusData = {
 value: OccupancyStatus,
+label: string,
+};
+export type OptionData = {
+value: string,
 label: string,
 };
 export type OrganizationRefData = {
@@ -183,6 +226,7 @@ total: number,
 last_page: number,
 };
 export type PaginatedDataCollection<TKey, TValue> = LengthAwarePaginator<TKey, TValue>;
+export type PenaltyType = 'none' | 'nights' | 'percent' | 'fixed';
 export type Permission = 'dashboard.view' | 'reservations.view' | 'reservations.create' | 'reservations.update' | 'reservations.assign' | 'reservations.cancel' | 'frontdesk.checkin' | 'frontdesk.checkout' | 'guests.view' | 'guests.create' | 'guests.update' | 'guests.merge' | 'rates.manage' | 'inventory.manage' | 'channels.manage' | 'housekeeping.view' | 'housekeeping.update' | 'maintenance.view' | 'maintenance.update' | 'billing.view' | 'billing.post' | 'billing.adjust' | 'payments.take' | 'payments.refund' | 'audit.run' | 'reports.view' | 'audit.view' | 'settings.property' | 'settings.rooms' | 'settings.taxes' | 'settings.policies' | 'settings.templates' | 'users.manage' | 'integrations.manage';
 export type PermissionGroupData = {
 group: string,
@@ -192,6 +236,40 @@ permissions: PermissionOptionData[],
 export type PermissionOptionData = {
 name: Permission,
 label: string,
+};
+export type PoliciesData = {
+cancellation: CancellationPolicyData[],
+deposit: DepositPolicyData[],
+};
+export type PoliciesMetaData = {
+currency: string,
+penalty_types: OptionData[],
+deposit_types: OptionData[],
+deposit_dues: OptionData[],
+balance_dues: OptionData[],
+};
+export type PolicyRefData = {
+id: string,
+name: string,
+summary: string,
+};
+export type PricePreviewData = {
+room_type: RoomTypeRefData,
+adults: number,
+children: number,
+nights: number,
+base_minor: number,
+extra_adults: number,
+extra_adult_minor: number,
+extra_children: number,
+extra_child_minor: number,
+nightly_minor: number,
+clamped: boolean,
+room_charge_minor: number,
+taxes: TaxBreakdownData,
+cancellation_summary: string | null,
+deposit_summary: string | null,
+currency: string,
 };
 export type ProblemData = {
 type: string,
@@ -226,6 +304,38 @@ export type PropertyRefData = {
 id: string,
 name: string,
 code: string,
+};
+export type RatePlanData = {
+id: string,
+name: string,
+code: string,
+description: string | null,
+meal_plan: MealPlan,
+meal_plan_label: string,
+cancellation_policy: PolicyRefData | null,
+deposit_policy: PolicyRefData | null,
+min_price_minor: number | null,
+max_price_minor: number | null,
+sort_order: number,
+is_active: boolean,
+currency: string,
+prices: RatePlanPriceData[],
+taxes: TaxRefData[],
+stamps: RecordStampsData,
+};
+export type RatePlanOptionsData = {
+currency: string,
+meal_plans: OptionData[],
+room_types: RoomTypeOptionData[],
+taxes: TaxData[],
+cancellation_policies: PolicyRefData[],
+deposit_policies: PolicyRefData[],
+};
+export type RatePlanPriceData = {
+room_type: RoomTypeOptionData,
+base_price_minor: number,
+extra_adult_minor: number,
+extra_child_minor: number,
 };
 export type RecordStampsData = {
 created_at: string | null,
@@ -306,6 +416,16 @@ per_page: number,
 total: number,
 last_page: number,
 };
+export type RoomTypeOptionData = {
+id: string,
+name: string,
+code: string,
+base_occupancy: number,
+max_adults: number,
+max_children: number,
+max_occupancy: number,
+is_active: boolean,
+};
 export type RoomTypeRefData = {
 id: string,
 name: string,
@@ -377,4 +497,44 @@ two_factor_enabled: boolean,
 last_login_at: string | null,
 invited_at: string | null,
 assignments: StaffAssignmentData[],
+};
+export type TaxBreakdownData = {
+currency: string,
+charge_minor: number,
+net_minor: number,
+inclusive_minor: number,
+exclusive_minor: number,
+total_minor: number,
+lines: TaxLineData[],
+};
+export type TaxCalculation = 'percentage' | 'per_night' | 'per_stay' | 'per_person_night';
+export type TaxData = {
+id: string,
+name: string,
+code: string,
+calculation: TaxCalculation,
+calculation_label: string,
+rate: string | null,
+amount_minor: number | null,
+is_inclusive: boolean,
+sort_order: number,
+is_active: boolean,
+stamps: RecordStampsData,
+};
+export type TaxLineData = {
+tax_id: string,
+name: string,
+code: string,
+basis: string,
+amount_minor: number,
+is_inclusive: boolean,
+};
+export type TaxListMetaData = {
+currency: string,
+calculations: OptionData[],
+};
+export type TaxRefData = {
+id: string,
+name: string,
+code: string,
 };

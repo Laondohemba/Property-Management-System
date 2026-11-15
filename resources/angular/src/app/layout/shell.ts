@@ -59,6 +59,14 @@ export class Shell {
       );
     }
 
+    if (this.session.permissions().has('settings.taxes')) {
+      settings.push({ label: 'Taxes & Fees', icon: 'receipt', link: '/settings/taxes' });
+    }
+
+    if (this.session.permissions().has('settings.policies')) {
+      settings.push({ label: 'Policies', icon: 'document', link: '/settings/policies' });
+    }
+
     if (this.session.canManageStaff()) {
       settings.push({ label: 'Users', icon: 'user', link: '/settings/users' });
     }
@@ -74,6 +82,10 @@ export class Shell {
     }
 
     const revenue: NavItem[] = [];
+
+    if (this.session.permissions().has('rates.manage')) {
+      revenue.push({ label: 'Rate Plans', icon: 'tag', link: '/rate-plans' });
+    }
 
     if (this.session.permissions().has('inventory.manage')) {
       revenue.push({ label: 'Inventory', icon: 'calendar', link: '/inventory' });

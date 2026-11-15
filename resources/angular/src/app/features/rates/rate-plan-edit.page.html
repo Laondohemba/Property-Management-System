@@ -1,0 +1,236 @@
+<pms-page-title
+  [title]="isNew() ? 'New Rate Plan' : (plan()?.name ?? 'Edit Rate Plan')"
+  [breadcrumbs]="[{ label: 'Revenue' }, { label: 'Rate Plans', link: '/rate-plans' }, { label: isNew() ? 'New' : 'Edit' }]" />
+
+@if (error(); as message) {
+  <div class="pms-alert-danger mb-5" role="alert">{{ message }}</div>
+}
+@if (saved()) {
+  <div class="pms-alert-success mb-5" role="status">Rate plan saved.</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="grid gap-x-[30px] xl:grid-cols-2">
+    <div>
+      <section class="pms-card">
+        <h2 class="pms-card-title">Details</h2>
+        <div class="grid gap-4 sm:grid-cols-[2fr_1fr]">
+          <div>
+            <label for="name" class="pms-label">Name</label>
+            <input id="name" type="text" formControlName="name" class="pms-input" placeholder="e.g. Best Available Rate" />
+            <pms-field-error [control]="form.controls.name" />
+          </div>
+          <div>
+            <label for="code" class="pms-label">Code</label>
+            <input id="code" type="text" formControlName="code" class="pms-input uppercase" />
+            <pms-field-error [control]="form.controls.code" />
+          </div>
+        </div>
+        <div class="mt-4">
+          <label for="description" class="pms-label">Description</label>
+          <textarea id="description" rows="2" formControlName="description" class="pms-input"></textarea>
+        </div>
+        <div class="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <label for="meal_plan" class="pms-label">Meals</label>
+            <select id="meal_plan" formControlName="meal_plan" class="pms-input">
+              @for (option of options()?.meal_plans ?? []; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="sort_order" class="pms-label">Sort order</label>
+            <input id="sort_order" type="number" min="0" formControlName="sort_order" class="pms-input" />
+          </div>
+          <label for="is_active" class="flex items-center gap-2 sm:mt-7">
+            <input id="is_active" type="checkbox" formControlName="is_active" class="pms-checkbox" />
+            <span class="text-sm">Active</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="pms-card">
+        <h2 class="pms-card-title">Policies</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="cancellation_policy_id" class="pms-label">Cancellation</label>
+            <select id="cancellation_policy_id" formControlName="cancellation_policy_id" class="pms-input">
+              <option value="">No cancellation policy</option>
+              @for (policy of options()?.cancellation_policies ?? []; track policy.id) {
+                <option [value]="policy.id">{{ policy.name }}</option>
+              }
+            </select>
+            @if (policySummary('cancellation'); as summary) {
+              <p class="mt-1 text-xs text-muted">{{ summary }}</p>
+            }
+          </div>
+          <div>
+            <label for="deposit_policy_id" class="pms-label">Deposit and payment</label>
+            <select id="deposit_policy_id" formControlName="deposit_policy_id" class="pms-input">
+              <option value="">No deposit policy</option>
+              @for (policy of options()?.deposit_policies ?? []; track policy.id) {
+                <option [value]="policy.id">{{ policy.name }}</option>
+              }
+            </select>
+            @if (policySummary('deposit'); as summary) {
+              <p class="mt-1 text-xs text-muted">{{ summary }}</p>
+            }
+          </div>
+          <a routerLink="/settings/policies" class="inline-block text-sm hover:underline">Manage policies</a>
+        </div>
+      </section>
+    </div>
+
+    <div>
+      <section class="pms-card">
+        <h2 class="pms-card-title">Taxes and fees</h2>
+        @if (options()?.taxes?.length) {
+          <div class="space-y-2">
+            @for (tax of options()!.taxes; track tax.id) {
+              <label class="flex items-start gap-2">
+                <input type="checkbox" class="pms-checkbox mt-0.5" [checked]="selectedTaxes().has(tax.id)"
+                       (change)="toggleTax(tax.id, $any($event.target).checked)" />
+                <span class="text-sm">
+                  {{ tax.name }}
+                  <span class="text-muted">· {{ tax.calculation === 'percentage' ? tax.rate + '%' : money(tax.amount_minor) }}
+                    {{ tax.is_inclusive ? 'included' : 'on top' }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        } @else if (!loading()) {
+          <p class="text-sm text-muted">No active taxes. Add them under Settings → Taxes &amp; Fees.</p>
+        }
+      </section>
+
+      <section class="pms-card">
+        <h2 class="pms-card-title">Price limits <span class="text-sm font-normal text-muted">| per night, {{ currency() }}</span></h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="min_price" class="pms-label">Minimum</label>
+            <input id="min_price" type="number" min="0" [step]="step()" formControlName="min_price" class="pms-input" />
+          </div>
+          <div>
+            <label for="max_price" class="pms-label">Maximum</label>
+            <input id="max_price" type="number" min="0" [step]="step()" formControlName="max_price" class="pms-input" />
+            <pms-field-error [control]="form.controls.max_price" />
+          </div>
+        </div>
+        <p class="mt-2 text-xs text-muted">Optional. Nightly prices are kept within these limits after supplements.</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="pms-card" aria-labelledby="prices-title">
+    <h2 id="prices-title" class="pms-card-title">Prices <span class="text-sm font-normal text-muted">| per night, {{ currency() }}</span></h2>
+    <p class="-mt-2 mb-4 text-sm text-muted">The base price covers each room type's base occupancy; each extra guest adds the supplement.</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm" formArrayName="prices">
+        <thead class="border-b-2 border-line text-heading">
+          <tr>
+            <th scope="col" class="px-3 py-2 font-semibold">Sell</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Room type</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Base price</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Extra adult</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Extra child</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of prices.controls; track row.controls.room_type.value.id; let i = $index) {
+            <tr [formGroupName]="i" class="border-b border-line last:border-0" [class.opacity-60]="!row.controls.sold.value">
+              <td class="px-3 py-2">
+                <input type="checkbox" formControlName="sold" class="pms-checkbox" [attr.aria-label]="'Sell ' + row.controls.room_type.value.name + ' under this plan'" />
+              </td>
+              <td class="px-3 py-2">
+                <span class="font-semibold text-heading">{{ row.controls.room_type.value.name }}</span>
+                <span class="block text-xs text-muted">base {{ row.controls.room_type.value.base_occupancy }} · up to {{ row.controls.room_type.value.max_occupancy }} guests@if (!row.controls.room_type.value.is_active) { · inactive }</span>
+              </td>
+              <td class="px-3 py-2"><input type="number" min="0" [step]="step()" formControlName="base" class="pms-input w-36!" [attr.aria-label]="'Base price for ' + row.controls.room_type.value.name" [required]="row.controls.sold.value" /></td>
+              <td class="px-3 py-2"><input type="number" min="0" [step]="step()" formControlName="extra_adult" class="pms-input w-32!" [attr.aria-label]="'Extra adult for ' + row.controls.room_type.value.name" /></td>
+              <td class="px-3 py-2"><input type="number" min="0" [step]="step()" formControlName="extra_child" class="pms-input w-32!" [attr.aria-label]="'Extra child for ' + row.controls.room_type.value.name" /></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="px-3 py-6 text-center text-muted">No room types yet. Add them under Settings → Room Types.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="mb-6 flex flex-wrap items-end gap-3">
+    @if (!isNew()) {
+      <div class="min-w-64 flex-1">
+        <label for="change_reason" class="pms-label">Reason for change <span class="font-normal text-muted">(kept in the rate audit)</span></label>
+        <input id="change_reason" type="text" formControlName="change_reason" class="pms-input" placeholder="e.g. Festive season pricing" />
+      </div>
+    }
+    <button type="submit" class="pms-btn-primary" [disabled]="saving() || loading()">
+      {{ saving() ? 'Saving…' : isNew() ? 'Create Rate Plan' : 'Save Changes' }}
+    </button>
+    <a routerLink="/rate-plans" class="pms-btn-secondary">Back to list</a>
+  </div>
+</form>
+
+@if (plan(); as current) {
+  <section class="pms-card" aria-labelledby="preview-title">
+    <h2 id="preview-title" class="pms-card-title">Price preview <span class="text-sm font-normal text-muted">| saved prices, before daily overrides</span></h2>
+    <form [formGroup]="previewForm" (ngSubmit)="runPreview()" class="grid gap-3 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] sm:items-end">
+      <div>
+        <label for="pv_room_type" class="pms-label">Room type</label>
+        <select id="pv_room_type" formControlName="room_type_id" class="pms-input" (change)="runPreview()">
+          @for (price of current.prices; track price.room_type.id) {
+            <option [value]="price.room_type.id">{{ price.room_type.name }}</option>
+          }
+        </select>
+      </div>
+      <div><label for="pv_adults" class="pms-label">Adults</label><input id="pv_adults" type="number" min="1" formControlName="adults" class="pms-input" (change)="runPreview()" /></div>
+      <div><label for="pv_children" class="pms-label">Children</label><input id="pv_children" type="number" min="0" formControlName="children" class="pms-input" (change)="runPreview()" /></div>
+      <div><label for="pv_nights" class="pms-label">Nights</label><input id="pv_nights" type="number" min="1" formControlName="nights" class="pms-input" (change)="runPreview()" /></div>
+      <button type="submit" class="pms-btn-secondary">Update</button>
+    </form>
+
+    @if (previewError(); as message) {
+      <p class="mt-4 text-sm text-danger" role="alert">{{ message }}</p>
+    }
+
+    @if (preview(); as p) {
+      <div class="mt-5 grid gap-6 lg:grid-cols-2" aria-live="polite">
+        <dl class="text-sm">
+          <div class="flex justify-between border-b border-line py-1.5"><dt>Base price per night</dt><dd>{{ money(p.base_minor) }}</dd></div>
+          @if (p.extra_adults) {
+            <div class="flex justify-between border-b border-line py-1.5"><dt>{{ p.extra_adults }} extra {{ p.extra_adults === 1 ? 'adult' : 'adults' }}</dt><dd>+ {{ money(p.extra_adult_minor) }}</dd></div>
+          }
+          @if (p.extra_children) {
+            <div class="flex justify-between border-b border-line py-1.5"><dt>{{ p.extra_children }} extra {{ p.extra_children === 1 ? 'child' : 'children' }}</dt><dd>+ {{ money(p.extra_child_minor) }}</dd></div>
+          }
+          <div class="flex justify-between border-b border-line py-1.5 font-semibold text-heading">
+            <dt>Per night @if (p.clamped) { <span class="font-normal text-muted">(price limit applied)</span> }</dt><dd>{{ money(p.nightly_minor) }}</dd>
+          </div>
+          <div class="flex justify-between border-b border-line py-1.5"><dt>Room charge ({{ p.nights }} {{ p.nights === 1 ? 'night' : 'nights' }})</dt><dd>{{ money(p.room_charge_minor) }}</dd></div>
+          @for (line of p.taxes.lines; track line.tax_id) {
+            <div class="flex justify-between border-b border-line py-1.5 text-muted">
+              <dt>{{ line.name }} <span class="text-xs">({{ line.basis }})</span></dt>
+              <dd>{{ line.is_inclusive ? '' : '+ ' }}{{ money(line.amount_minor) }}</dd>
+            </div>
+          }
+          <div class="flex justify-between py-2 text-base font-bold text-heading"><dt>Guest pays</dt><dd>{{ money(p.taxes.total_minor) }}</dd></div>
+          @if (p.taxes.inclusive_minor) {
+            <p class="text-xs text-muted">Includes {{ money(p.taxes.inclusive_minor) }} of taxes already in the room price (net {{ money(p.taxes.net_minor) }}).</p>
+          }
+        </dl>
+        <div class="space-y-3 text-sm">
+          @if (p.cancellation_summary) {
+            <div><h3 class="font-semibold text-heading">Cancellation</h3><p>{{ p.cancellation_summary }}</p></div>
+          }
+          @if (p.deposit_summary) {
+            <div><h3 class="font-semibold text-heading">Deposit and payment</h3><p>{{ p.deposit_summary }}</p></div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <div class="mt-4 mb-6"><pms-record-stamps [stamps]="current.stamps" /></div>
+  <pms-record-history type="rate_plan" [id]="current.id" />
+}
