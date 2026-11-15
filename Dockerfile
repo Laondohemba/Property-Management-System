@@ -43,7 +43,7 @@ ENV APP_VERSION=${APP_VERSION} \
 # Build headers are installed as a virtual package and removed in the same layer.
 RUN apk add --no-cache nginx supervisor mariadb-client redis libpng libzip icu-libs zip \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers libpng-dev libzip-dev icu-dev \
-    && docker-php-ext-install -j"$(nproc)" pdo_mysql gd zip opcache intl bcmath pcntl \
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql gd zip opcache intl bcmath pcntl exif \
     && apk del .build-deps \
     && rm -rf /tmp/* /usr/src/php*
 

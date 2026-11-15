@@ -235,10 +235,20 @@ max_children: number,
 max_occupancy: number,
 bed_configuration: BedData[],
 amenities: AmenityData[],
+images: RoomTypeImageData[],
 rooms_count?: number,
 sort_order: number,
 is_active: boolean,
 stamps: RecordStampsData,
+};
+export type RoomTypeImageData = {
+id: string,
+file_name: string,
+alt: string | null,
+size: number,
+position: number,
+thumb_url: string,
+large_url: string | null,
 };
 export type RoomTypeListMetaData = {
 bed_types: BedTypeOptionData[],

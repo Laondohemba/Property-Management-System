@@ -25,6 +25,7 @@ Key design choices:
 - **Generated API types.** Every BFF response is a typed DTO (spatie/laravel-data). `composer types` generates the matching TypeScript types into `resources/angular/src/app/core/bff/generated/bff.ts`, and a backend test fails if the committed file is out of date.
 - **Consistent errors.** Failures are returned as RFC 9457 `application/problem+json` with stable error codes and field-level validation errors.
 - **Modular domains.** Backend code lives in `app/Modules/*` (Identity, Property, Inventory, Reporting, …), with shared infrastructure in `app/Support`.
+- **Stateless pods, private media.** Uploaded files (such as room-type images) live on a private media disk: S3-compatible storage in deployed environments, the local disk in development (`MEDIA_DISK`). Browsers only ever receive signed, expiring URLs to resized WebP versions; originals and their metadata are never served. Image versions are built on the queue.
 - **One image, four roles.** The same container image runs as web pods (Nginx + PHP-FPM), Horizon queue workers, a single scheduler and, later, Reverb WebSockets. Migrations run once per release in a Kubernetes Job, and every schema change follows the expand/contract pattern so rollouts and rollbacks never break running pods. See [k8s/README.md](k8s/README.md).
 
 UI styling uses Tailwind CSS with Angular CDK, following the NiceAdmin visual language.
@@ -64,6 +65,8 @@ npm run dev
 Open **http://localhost:4200**. The Angular dev server proxies `/bff`, `/login`, `/sanctum` and the other server routes to Laravel on port 8000, so the browser sees a single origin.
 
 > Use `localhost:4200`, not `127.0.0.1:8000`, during development: sessions are only accepted from the origins listed in `SANCTUM_STATEFUL_DOMAINS`.
+
+> **Redis must be running** (sessions, cache and queues use it). If a page shows `Connection refused [tcp://127.0.0.1:6379]`, start Redis from Laragon (*Menu → Redis*, or tick it under *Preferences → Services* so **Start All** includes it). The queue worker in `npm run dev` also builds the full-size room-type images; until it has run, the gallery shows the thumbnail.
 
 ### Accounts
 

@@ -10,12 +10,13 @@ import { RecordStampsLine } from '../../../shared/ui/record-stamps';
 import { RecordHistory } from '../../audit/record-history';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { InventoryApi } from './inventory.api';
+import { RoomTypeGallery } from './room-type-gallery';
 
-/** Create (no id) or edit a room type: capacity, beds and amenities (SYS-04). */
+/** Create (no id) or edit a room type: capacity, beds, amenities and images (SYS-04). */
 @Component({
   selector: 'pms-room-type-edit-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError, RecordStampsLine, RecordHistory],
+  imports: [ReactiveFormsModule, RouterLink, PageTitle, FieldError, RecordStampsLine, RecordHistory, RoomTypeGallery],
   templateUrl: './room-type-edit.page.html',
 })
 export class RoomTypeEditPage implements OnInit {

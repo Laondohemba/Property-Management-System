@@ -130,6 +130,14 @@
 </form>
 
 @if (roomType(); as current) {
+  <div class="mt-6">
+    <pms-room-type-gallery [roomTypeId]="current.id" [images]="current.images" />
+  </div>
+} @else if (isNew() && !loading()) {
+  <p class="mt-6 text-sm text-muted">Save the room type first, then add its images here.</p>
+}
+
+@if (roomType(); as current) {
   <div class="mt-4 mb-6"><pms-record-stamps [stamps]="current.stamps" /></div>
   <pms-record-history type="room_type" [id]="current.id" />
 }

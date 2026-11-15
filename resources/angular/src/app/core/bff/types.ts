@@ -21,6 +21,7 @@ import type {
   RoleRefData,
   RoomData,
   RoomTypeData,
+  RoomTypeImageData,
   SessionMetaData,
   SessionPropertyData,
   SessionUserData,
@@ -66,6 +67,7 @@ export type DashboardTile = DashboardTileData;
 export type Amenity = AmenityData;
 export type Bed = BedData;
 export type RoomType = RoomTypeData;
+export type RoomTypeImage = RoomTypeImageData;
 export type Room = RoomData;
 export type StaffAssignment = StaffAssignmentData;
 export type StaffUser = StaffUserData;

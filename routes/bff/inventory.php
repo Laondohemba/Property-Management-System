@@ -3,6 +3,7 @@
 use App\Modules\Inventory\Http\Controllers\AmenityController;
 use App\Modules\Inventory\Http\Controllers\RoomController;
 use App\Modules\Inventory\Http\Controllers\RoomTypeController;
+use App\Modules\Inventory\Http\Controllers\RoomTypeImageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +20,15 @@ Route::middleware(['auth:sanctum', 'property'])->prefix('settings')->name('setti
     Route::post('room-types', [RoomTypeController::class, 'store'])->name('room-types.store');
     Route::get('room-types/{roomType}', [RoomTypeController::class, 'show'])->name('room-types.show');
     Route::patch('room-types/{roomType}', [RoomTypeController::class, 'update'])->name('room-types.update');
+
+    // Gallery: one image per upload request, so the SPA can show progress per file.
+    Route::post('room-types/{roomType}/images', [RoomTypeImageController::class, 'store'])
+        ->middleware('throttle:60,1')->name('room-types.images.store');
+    Route::put('room-types/{roomType}/images/order', [RoomTypeImageController::class, 'reorder'])->name('room-types.images.order');
+    Route::patch('room-types/{roomType}/images/{image}', [RoomTypeImageController::class, 'update'])
+        ->whereUuid('image')->name('room-types.images.update');
+    Route::delete('room-types/{roomType}/images/{image}', [RoomTypeImageController::class, 'destroy'])
+        ->whereUuid('image')->name('room-types.images.destroy');
 
     Route::get('rooms', [RoomController::class, 'index'])->name('rooms.index');
     Route::post('rooms', [RoomController::class, 'store'])->name('rooms.store');

@@ -4,7 +4,7 @@ Delivery follows four phases. Each phase is built in small, reviewable steps; a 
 
 **Legend:** ✅ done · 🚧 in progress · ⬜ not started
 
-## Phase 0: Foundation 🚧
+## Phase 0: Foundation ✅
 
 Platform, security and setup that every later module builds on.
 
@@ -18,7 +18,7 @@ Platform, security and setup that every later module builds on.
 | 0.6 | **Audit logging base.** Who/what/when/where with before/after values for settings, users and roles; security events (sign-ins, failures, lockouts, 2FA, passwords, invitations, permission changes); append-only, hash-chained trail with `audit:verify`; basic read-only viewer | ✅ |
 | 0.7 | **Quality gates.** Architecture tests (module boundaries, strict types, layering), Larastan level 8, Angular ESLint, GitHub Actions CI running Pint, Larastan, the test suite on MySQL + Redis, the BFF types drift check, lint, unit tests, build and dependency audits. Created/updated-by stamps and per-record history on settings screens | ✅ |
 | 0.8 | **Containers and Kubernetes.** Pinned multi-stage image (non-root, read-only root filesystem), Nginx + PHP-FPM with SPA fallback and cache headers, Kustomize manifests for web (HPA, PDB, graceful drain), Horizon workers, scheduler and the release Job, optional Reverb component, staging and production overlays; Horizon queues per spec §10.3; SPA version-skew handling; migration classification check (expand/contract); CI image build, vulnerability scan, smoke test and manifest validation | ✅ |
-| 0.9 | **Media storage.** S3-compatible file storage and room-type images | ⬜ |
+| 0.9 | **Media storage.** Uploaded files on a private media disk (S3 in deployed environments, local disk in development) via spatie/laravel-medialibrary; room-type image gallery with validated uploads (type sniffed from content, size, dimensions, 20 per room type), WebP thumbnails at upload and full-size versions on the queue, signed expiring URLs only (originals and EXIF never served), drag-and-drop or keyboard reordering with a cover image, alt text, removal via the confirm modal, audit history entries, cover thumbnails on the room-type list | ✅ |
 
 ## Phase 1: MVP (core PMS) ⬜
 

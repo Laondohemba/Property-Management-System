@@ -10,6 +10,7 @@ use App\Modules\Inventory\Models\RoomType;
 use App\Support\Http\DTOs\RecordStampsData;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Room type setup view (SYS-04).
@@ -19,6 +20,7 @@ class RoomTypeData extends Data
     /**
      * @param  array<int, BedData>  $bed_configuration
      * @param  array<int, AmenityData>  $amenities
+     * @param  array<int, RoomTypeImageData>  $images  Gallery in display order; the first is the cover.
      */
     public function __construct(
         public string $id,
@@ -31,6 +33,7 @@ class RoomTypeData extends Data
         public int $max_occupancy,
         public array $bed_configuration,
         public array $amenities,
+        public array $images,
         public int|Optional $rooms_count,
         public int $sort_order,
         public bool $is_active,
@@ -38,7 +41,7 @@ class RoomTypeData extends Data
     ) {}
 
     /**
-     * Expects the amenities relation loaded; rooms_count is included when counted.
+     * Expects the amenities and media relations loaded; rooms_count is included when counted.
      */
     public static function fromModel(RoomType $roomType): self
     {
@@ -59,6 +62,7 @@ class RoomTypeData extends Data
                 return new BedData($type, $type->label(), (int) $bed['count']);
             }, $roomType->bed_configuration ?? []),
             amenities: $roomType->amenities->map(fn (Amenity $amenity): AmenityData => AmenityData::fromModel($amenity))->values()->all(),
+            images: $roomType->getMedia(RoomType::IMAGES)->map(fn (Media $media): RoomTypeImageData => RoomTypeImageData::fromMedia($media))->values()->all(),
             rooms_count: $roomsCount === null ? Optional::create() : (int) $roomsCount,
             sort_order: $roomType->sort_order,
             is_active: $roomType->is_active,

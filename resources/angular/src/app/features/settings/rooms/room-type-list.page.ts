@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { SessionStore } from '../../../core/auth/session.store';
 import { toProblem } from '../../../core/bff/problem';
 import { RoomType } from '../../../core/bff/types';
+import { Icon } from '../../../shared/ui/icon';
 import { PageTitle } from '../../../shared/ui/page-title';
 import { RecordStampsLine } from '../../../shared/ui/record-stamps';
 import { StatusBadge } from '../../../shared/ui/status-badge';
@@ -12,7 +13,7 @@ import { InventoryApi } from './inventory.api';
 @Component({
   selector: 'pms-room-type-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, PageTitle, StatusBadge, RecordStampsLine],
+  imports: [RouterLink, PageTitle, StatusBadge, RecordStampsLine, Icon],
   template: `
     <pms-page-title title="Room Types" [breadcrumbs]="[{ label: 'Settings' }, { label: 'Room Types' }]" />
 
@@ -46,10 +47,21 @@ import { InventoryApi } from './inventory.api';
             @for (type of roomTypes(); track type.id) {
               <tr class="border-b border-line last:border-0 hover:bg-primary-soft">
                 <td class="px-3 py-3">
-                  <span class="font-semibold text-heading">{{ type.name }}</span>
-                  @if (type.amenities.length) {
-                    <span class="block text-xs text-muted">{{ amenityNames(type) }}</span>
-                  }
+                  <div class="flex items-center gap-3">
+                    @if (type.images[0]; as cover) {
+                      <img [src]="cover.thumb_url" alt="" class="h-10 w-15 shrink-0 rounded object-cover" loading="lazy" />
+                    } @else {
+                      <span class="flex h-10 w-15 shrink-0 items-center justify-center rounded bg-surface-alt text-subtle" aria-hidden="true">
+                        <pms-icon name="photo" size="size-5" />
+                      </span>
+                    }
+                    <span>
+                      <span class="font-semibold text-heading">{{ type.name }}</span>
+                      @if (type.amenities.length) {
+                        <span class="block text-xs text-muted">{{ amenityNames(type) }}</span>
+                      }
+                    </span>
+                  </div>
                 </td>
                 <td class="px-3 py-3"><code class="rounded bg-primary-soft px-1.5 py-0.5 text-heading">{{ type.code }}</code></td>
                 <td class="px-3 py-3 whitespace-nowrap">

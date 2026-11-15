@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * A sellable category of rooms at a property (SYS-04).
@@ -37,16 +41,22 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property int $sort_order
  * @property bool $is_active
  * @property-read Collection<int, Amenity> $amenities
+ * @property-read Collection<int, Media> $media
  */
 #[Fillable([
     'organization_id', 'property_id', 'name', 'code', 'description', 'base_occupancy', 'max_adults',
     'max_children', 'max_occupancy', 'bed_configuration', 'sort_order', 'is_active', 'created_by', 'updated_by',
 ])]
 #[UseFactory(RoomTypeFactory::class)]
-class RoomType extends Model
+class RoomType extends Model implements HasMedia
 {
     /** @use HasFactory<RoomTypeFactory> */
-    use BelongsToProperty, HasFactory, HasRecordStamps, HasUlids, LogsActivity, SoftDeletes;
+    use BelongsToProperty, HasFactory, HasRecordStamps, HasUlids, InteractsWithMedia, LogsActivity, SoftDeletes;
+
+    /** Gallery shown in setup and, later, on booking channels (SYS-04). The first image is the cover. */
+    public const IMAGES = 'images';
+
+    public const MAX_IMAGES = 20;
 
     /**
      * @var array<string, mixed>
@@ -84,6 +94,39 @@ class RoomType extends Model
     public function amenities(): BelongsToMany
     {
         return $this->belongsToMany(Amenity::class)->orderBy('name');
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(self::IMAGES)
+            ->useDisk((string) config('media-library.disk_name'))
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
+    }
+
+    /**
+     * Only conversions are ever served: re-encoding drops EXIF metadata (camera, GPS) from the
+     * original upload, which stays private on the media disk.
+     */
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        // Small enough to build during the upload request, so the gallery updates at once.
+        // Conversion settings first; the image manipulations after them are forwarded to the driver.
+        $this->addMediaConversion('thumb')
+            ->performOnCollections(self::IMAGES)
+            ->nonOptimized()
+            ->nonQueued()
+            ->fit(Fit::Crop, 480, 320)
+            ->format('webp')
+            ->quality(80);
+
+        // Full-size view: built on the worker pods.
+        $this->addMediaConversion('large')
+            ->performOnCollections(self::IMAGES)
+            ->nonOptimized()
+            ->queued()
+            ->fit(Fit::Max, 1600, 1600)
+            ->format('webp')
+            ->quality(82);
     }
 
     /**

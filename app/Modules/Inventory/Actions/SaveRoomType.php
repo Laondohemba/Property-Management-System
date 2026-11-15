@@ -43,7 +43,7 @@ class SaveRoomType
                 );
             }
 
-            return $roomType->load('amenities')->loadCount('rooms');
+            return $roomType->load(['amenities', 'media'])->loadCount('rooms');
         });
     }
 }

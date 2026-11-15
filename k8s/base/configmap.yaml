@@ -42,6 +42,8 @@ data:
   CACHE_STORE: redis
   QUEUE_CONNECTION: redis
   FILESYSTEM_DISK: s3
+  # Uploaded media (room-type images): private bucket, browsers get signed expiring URLs.
+  MEDIA_DISK: s3
   AWS_DEFAULT_REGION: us-east-1
   AWS_BUCKET: pms-media
   AWS_USE_PATH_STYLE_ENDPOINT: "false"

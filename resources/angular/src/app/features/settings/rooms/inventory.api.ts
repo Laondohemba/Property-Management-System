@@ -1,6 +1,6 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpEventType, HttpParams, HttpProgressEvent } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, filter, map } from 'rxjs';
 
 import {
   Amenity,
@@ -11,6 +11,7 @@ import {
   RoomRangeInput,
   RoomRangeMetaData,
   RoomType,
+  RoomTypeImage,
   RoomTypeInput,
   RoomTypeListMetaData,
 } from '../../../core/bff/types';
@@ -18,6 +19,12 @@ import {
 export interface Page<T, M> {
   items: T[];
   meta: M;
+}
+
+/** Progress of one upload; `result` arrives with the final event. */
+export interface UploadEvent<T> {
+  progress: number;
+  result?: T;
 }
 
 export interface RoomFilters {
@@ -81,6 +88,51 @@ export class InventoryApi {
 
   updateRoomType(id: string, input: Partial<RoomTypeInput>): Observable<RoomType> {
     return this.http.patch<BffEnvelope<RoomType>>(`${this.base}/room-types/${id}`, input).pipe(map((r) => r.data));
+  }
+
+  // Room-type gallery ---------------------------------------------------------
+
+  /** One file per request; emits upload progress (0 to 100) and finally the stored image. */
+  uploadRoomTypeImage(roomTypeId: string, file: File, alt?: string): Observable<UploadEvent<RoomTypeImage>> {
+    const body = new FormData();
+    body.append('image', file, file.name);
+    if (alt) {
+      body.append('alt', alt);
+    }
+
+    return this.http
+      .post<BffEnvelope<RoomTypeImage>>(`${this.base}/room-types/${roomTypeId}/images`, body, {
+        reportProgress: true,
+        observe: 'events',
+      })
+      .pipe(
+        filter((event) => event.type === HttpEventType.UploadProgress || event.type === HttpEventType.Response),
+        map((event): UploadEvent<RoomTypeImage> => {
+          if (event.type === HttpEventType.Response) {
+            return { progress: 100, result: event.body!.data };
+          }
+          const { loaded, total } = event as HttpProgressEvent;
+          // Hold at 99 until the server has stored the file and built the thumbnail.
+          return { progress: total ? Math.min(99, Math.round((loaded / total) * 100)) : 0 };
+        }),
+      );
+  }
+
+  updateRoomTypeImage(roomTypeId: string, imageId: string, alt: string | null): Observable<RoomTypeImage> {
+    return this.http
+      .patch<BffEnvelope<RoomTypeImage>>(`${this.base}/room-types/${roomTypeId}/images/${imageId}`, { alt })
+      .pipe(map((r) => r.data));
+  }
+
+  /** Sends every image id in the new order; the first becomes the cover. */
+  reorderRoomTypeImages(roomTypeId: string, ids: string[]): Observable<RoomTypeImage[]> {
+    return this.http
+      .put<BffEnvelope<RoomTypeImage[]>>(`${this.base}/room-types/${roomTypeId}/images/order`, { ids })
+      .pipe(map((r) => r.data));
+  }
+
+  deleteRoomTypeImage(roomTypeId: string, imageId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/room-types/${roomTypeId}/images/${imageId}`);
   }
 
   // Rooms -------------------------------------------------------------------
