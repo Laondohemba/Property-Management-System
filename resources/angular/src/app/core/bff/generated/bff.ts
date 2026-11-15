@@ -48,6 +48,11 @@ export type BedTypeOptionData = {
 value: BedType,
 label: string,
 };
+export type BlockType = 'out_of_order' | 'out_of_service' | 'owner' | 'hold';
+export type BlockTypeOptionData = {
+value: BlockType,
+label: string,
+};
 export type CursorPaginatedDataCollection<TKey, TValue> = CursorPaginator<TKey, TValue>;
 export type CursorPaginator<TKey, TValue> = {
 data: TKey extends string ? Record<TKey, TValue> : TValue[],
@@ -96,6 +101,47 @@ export type HousekeepingStatusData = {
 value: HousekeepingStatus,
 label: string,
 };
+export type InventoryBlockData = {
+id: string,
+room_type: RoomTypeRefData,
+type: BlockType,
+type_label: string,
+quantity: number,
+from_date: string,
+to_date: string,
+reason: string,
+expires_at: string | null,
+released_at: string | null,
+released_by: ActorRefData | null,
+status: string,
+stamps: RecordStampsData,
+};
+export type InventoryDayData = {
+date: string,
+total: number,
+blocked: number,
+sold: number,
+overbook_allowance: number,
+available: number,
+sellable: number,
+};
+export type InventoryGridData = {
+from: string,
+to: string,
+first_date: string,
+last_date: string,
+dates: string[],
+rows: InventoryRowData[],
+totals: InventoryDayData[],
+};
+export type InventoryMetaData = {
+block_types: BlockTypeOptionData[],
+};
+export type InventoryRowData = {
+room_type: RoomTypeRefData,
+is_active: boolean,
+days: InventoryDayData[],
+};
 export type LengthAwarePaginator<TKey, TValue> = {
 data: TKey extends string ? Record<TKey, TValue> : TValue[],
 links: {
@@ -126,6 +172,9 @@ label: string,
 export type OrganizationRefData = {
 id: string,
 name: string,
+};
+export type OverbookingResultData = {
+nights_changed: number,
 };
 export type PageMetaData = {
 page: number,

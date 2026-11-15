@@ -1,0 +1,282 @@
+<pms-page-title title="Inventory" [breadcrumbs]="[{ label: 'Revenue' }, { label: 'Inventory' }]" />
+
+@if (error(); as message) {
+  <div class="pms-alert-danger mb-5" role="alert">{{ message }}</div>
+}
+@if (notice(); as message) {
+  <div class="pms-alert-success mb-5 flex items-start justify-between gap-3" role="status">
+    <span>{{ message }}</span>
+    <button type="button" class="text-sm font-semibold hover:underline" (click)="notice.set(null)">Dismiss</button>
+  </div>
+}
+
+<section class="pms-card" aria-labelledby="grid-title">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <h2 id="grid-title" class="pms-card-title mb-0!">
+      Availability
+      @if (grid(); as g) {
+        <span class="text-sm font-normal text-muted">| business date {{ g.first_date }}</span>
+      }
+    </h2>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" class="pms-btn-secondary px-3!" (click)="shift(-1)" [disabled]="loading()" aria-label="Earlier nights">←</button>
+      <button type="button" class="pms-btn-secondary" (click)="goToToday()" [disabled]="loading()">Today</button>
+      <button type="button" class="pms-btn-secondary px-3!" (click)="shift(1)" [disabled]="loading()" aria-label="Later nights">→</button>
+      <label for="jump" class="sr-only">Start date</label>
+      <input id="jump" type="date" class="pms-input w-auto! py-1.5!" [value]="from() ?? ''" (change)="jumpTo($any($event.target).value)" />
+      <div class="flex overflow-hidden rounded border border-line" role="group" aria-label="Nights shown">
+        @for (size of windowSizes; track size) {
+          <button type="button" class="px-3 py-1.5 text-sm font-semibold" (click)="setWindow(size)" [attr.aria-pressed]="nights() === size"
+                  [class]="nights() === size ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-primary-soft'">{{ size }}</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (grid(); as g) {
+    @if (g.rows.length === 0) {
+      <p class="text-sm text-muted">No room types yet. Add room types and rooms under Settings to start selling.</p>
+    } @else {
+      <div class="overflow-x-auto" [class.opacity-60]="loading()">
+        <table class="w-full border-separate border-spacing-0 text-sm">
+          <caption class="sr-only">Units available per room type and night</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="sticky left-0 z-10 min-w-44 border-b-2 border-line bg-surface px-3 py-2 text-left font-semibold text-heading">Room type</th>
+              @for (date of g.dates; track date) {
+                <th scope="col" class="min-w-16 border-b-2 border-line px-1 py-2 text-center font-semibold"
+                    [class.bg-surface-alt]="isWeekend(date)" [class.text-primary]="date === g.first_date">
+                  <span class="block text-xs font-normal text-muted">{{ weekday(date) }}</span>
+                  <span class="whitespace-nowrap">{{ dayOfMonth(date) }}</span>
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of g.rows; track row.room_type.id) {
+              <tr>
+                <th scope="row" class="sticky left-0 z-10 border-b border-line bg-surface px-3 py-2 text-left font-semibold text-heading">
+                  {{ row.room_type.name }}
+                  <span class="block text-xs font-normal text-muted">{{ row.room_type.code }}@if (!row.is_active) { · inactive }</span>
+                </th>
+                @for (day of row.days; track day.date) {
+                  <td class="border-b border-line px-1 py-1.5 text-center" [class]="cellTone(day)" [class.bg-surface-alt]="isWeekend(day.date) && day.available > 0"
+                      [attr.aria-label]="cellLabel(row.room_type.name, day)" [title]="cellLabel(row.room_type.name, day)">
+                    <span class="block">{{ day.available }}<span class="text-xs font-normal text-muted">/{{ day.total }}</span></span>
+                    @if (day.blocked || day.overbook_allowance) {
+                      <span class="block text-[10px] leading-tight text-muted">
+                        @if (day.blocked) { <span>{{ day.blocked }} blk</span> }
+                        @if (day.overbook_allowance) { <span class="text-info-fg"> +{{ day.overbook_allowance }}</span> }
+                      </span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+            <tr>
+              <th scope="row" class="sticky left-0 z-10 bg-surface px-3 py-2 text-left font-semibold text-heading">All room types</th>
+              @for (day of g.totals; track day.date) {
+                <td class="px-1 py-2 text-center font-semibold" [class]="cellTone(day)" [attr.aria-label]="cellLabel('All room types', day)">
+                  {{ day.available }}<span class="text-xs font-normal text-muted">/{{ day.total }}</span>
+                </td>
+              }
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-xs text-muted">
+        Each cell shows available / total units. <span class="rounded bg-warning-soft px-1 text-warning-fg">Amber</span> means 20% or less is left,
+        <span class="rounded bg-danger-soft px-1 text-danger-fg">red</span> means full. “blk” is blocked; “+n” is the overbooking allowance.
+      </p>
+    }
+  } @else if (loading()) {
+    <p class="text-sm text-muted">Loading inventory…</p>
+  }
+</section>
+
+<div class="grid gap-x-[30px] xl:grid-cols-2">
+  <section class="pms-card" aria-labelledby="block-title">
+    <h2 id="block-title" class="pms-card-title">Block rooms</h2>
+    <p class="-mt-2 mb-4 text-sm text-muted">Take units off sale for out-of-order rooms, owner use or a hold. Holds can expire on their own.</p>
+
+    @if (blockError(); as message) {
+      <div class="pms-alert-danger mb-4" role="alert">
+        {{ message }}
+        @if (blockNights().length) {
+          <ul class="mt-1 list-inside list-disc text-sm">
+            @for (night of blockNights(); track night.date) {
+              <li>{{ longDate(night.date) }}: {{ night.available }} free</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    <form [formGroup]="blockForm" (ngSubmit)="submitBlock()" novalidate class="space-y-4">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="block_room_type" class="pms-label">Room type</label>
+          <select id="block_room_type" formControlName="room_type_id" class="pms-input">
+            @for (type of roomTypes(); track type.id) {
+              <option [value]="type.id">{{ type.name }} ({{ type.code }})</option>
+            }
+          </select>
+          <pms-field-error [control]="blockForm.controls.room_type_id" />
+        </div>
+        <div>
+          <label for="block_type" class="pms-label">Reason type</label>
+          <select id="block_type" formControlName="type" class="pms-input">
+            @for (option of blockTypes(); track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label for="block_from" class="pms-label">First night</label>
+          <input id="block_from" type="date" formControlName="from_date" class="pms-input" [min]="grid()?.first_date ?? ''" [max]="grid()?.last_date ?? ''" />
+          <pms-field-error [control]="blockForm.controls.from_date" />
+        </div>
+        <div>
+          <label for="block_to" class="pms-label">Last night</label>
+          <input id="block_to" type="date" formControlName="to_date" class="pms-input" [min]="blockForm.controls.from_date.value" [max]="grid()?.last_date ?? ''" />
+          <pms-field-error [control]="blockForm.controls.to_date" />
+        </div>
+        <div>
+          <label for="block_quantity" class="pms-label">Units</label>
+          <input id="block_quantity" type="number" min="1" formControlName="quantity" class="pms-input" />
+          <pms-field-error [control]="blockForm.controls.quantity" />
+        </div>
+      </div>
+
+      <div>
+        <label for="block_reason" class="pms-label">Reason</label>
+        <input id="block_reason" type="text" formControlName="reason" class="pms-input" placeholder="e.g. Bathroom refit, rooms 204 and 205" />
+        <pms-field-error [control]="blockForm.controls.reason" />
+      </div>
+
+      <div>
+        <label for="block_expires" class="pms-label">Release automatically at <span class="font-normal text-muted">(optional)</span></label>
+        <input id="block_expires" type="datetime-local" formControlName="expires_at" class="pms-input" />
+        <pms-field-error [control]="blockForm.controls.expires_at" />
+      </div>
+
+      <button type="submit" class="pms-btn-primary" [disabled]="saving() === 'block' || !roomTypes().length">
+        {{ saving() === 'block' ? 'Blocking…' : 'Block units' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="pms-card" aria-labelledby="overbooking-title">
+    <h2 id="overbooking-title" class="pms-card-title">Overbooking</h2>
+    <p class="-mt-2 mb-4 text-sm text-muted">Allow a few more sales than rooms on nights where cancellations and no-shows are expected.</p>
+
+    @if (overbookingError(); as message) {
+      <div class="pms-alert-danger mb-4" role="alert">{{ message }}</div>
+    }
+
+    <form [formGroup]="overbookingForm" (ngSubmit)="submitOverbooking()" novalidate class="space-y-4">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="ob_room_type" class="pms-label">Room type</label>
+          <select id="ob_room_type" formControlName="room_type_id" class="pms-input">
+            @for (type of roomTypes(); track type.id) {
+              <option [value]="type.id">{{ type.name }} ({{ type.code }})</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="ob_allowance" class="pms-label">Extra units allowed</label>
+          <input id="ob_allowance" type="number" min="0" max="50" formControlName="allowance" class="pms-input" />
+          <pms-field-error [control]="overbookingForm.controls.allowance" />
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="ob_from" class="pms-label">From</label>
+          <input id="ob_from" type="date" formControlName="from" class="pms-input" [min]="grid()?.first_date ?? ''" [max]="grid()?.last_date ?? ''" />
+          <pms-field-error [control]="overbookingForm.controls.from" />
+        </div>
+        <div>
+          <label for="ob_to" class="pms-label">To</label>
+          <input id="ob_to" type="date" formControlName="to" class="pms-input" [min]="overbookingForm.controls.from.value" [max]="grid()?.last_date ?? ''" />
+          <pms-field-error [control]="overbookingForm.controls.to" />
+        </div>
+      </div>
+
+      <fieldset>
+        <legend class="pms-label">On these nights</legend>
+        <div class="flex flex-wrap gap-3">
+          @for (day of weekdays; track day.value) {
+            <label class="flex items-center gap-1.5 text-sm">
+              <input type="checkbox" class="pms-checkbox" [checked]="overbookingDays().has(day.value)"
+                     (change)="toggleDay(day.value, $any($event.target).checked)" />
+              {{ day.label }}
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <button type="submit" class="pms-btn-primary" [disabled]="saving() === 'overbooking' || !roomTypes().length">
+        {{ saving() === 'overbooking' ? 'Saving…' : 'Set allowance' }}
+      </button>
+    </form>
+  </section>
+</div>
+
+<section class="pms-card" aria-labelledby="blocks-title">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <h2 id="blocks-title" class="pms-card-title mb-0!">Blocks</h2>
+    <div class="flex overflow-hidden rounded border border-line" role="group" aria-label="Which blocks">
+      <button type="button" class="px-3 py-1.5 text-sm font-semibold" (click)="showBlocks('active')" [attr.aria-pressed]="blockStatus() === 'active'"
+              [class]="blockStatus() === 'active' ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-primary-soft'">Active</button>
+      <button type="button" class="px-3 py-1.5 text-sm font-semibold" (click)="showBlocks('all')" [attr.aria-pressed]="blockStatus() === 'all'"
+              [class]="blockStatus() === 'all' ? 'bg-primary text-white' : 'bg-surface text-body hover:bg-primary-soft'">All</button>
+    </div>
+  </div>
+
+  @if (blocks().length) {
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="border-b-2 border-line text-heading">
+          <tr>
+            <th scope="col" class="px-3 py-2 font-semibold">Room type</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Type</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Nights</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Units</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Reason</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Expires</th>
+            <th scope="col" class="px-3 py-2 font-semibold">Added</th>
+            <th scope="col" class="px-3 py-2"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (block of blocks(); track block.id) {
+            <tr class="border-b border-line last:border-0">
+              <td class="px-3 py-3 font-semibold text-heading">{{ block.room_type.name }}</td>
+              <td class="px-3 py-3">{{ block.type_label }}</td>
+              <td class="px-3 py-3 whitespace-nowrap">{{ block.from_date }} → {{ block.to_date }}</td>
+              <td class="px-3 py-3">{{ block.quantity }}</td>
+              <td class="px-3 py-3">{{ block.reason }}</td>
+              <td class="px-3 py-3 whitespace-nowrap text-muted">{{ expiry(block.expires_at) }}</td>
+              <td class="px-3 py-3"><pms-record-stamps [stamps]="block.stamps" [compact]="true" /></td>
+              <td class="px-3 py-3 text-right">
+                @if (block.status === 'active') {
+                  <button type="button" class="font-semibold text-danger hover:underline" (click)="release(block)">Release</button>
+                } @else {
+                  <span class="text-xs text-muted">{{ block.status === 'released' ? 'Released' : 'Ended' }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="text-sm text-muted">{{ blockStatus() === 'active' ? 'No active blocks.' : 'No blocks yet.' }}</p>
+  }
+</section>

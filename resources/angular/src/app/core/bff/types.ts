@@ -10,6 +10,14 @@ import type {
   AmenityData,
   BedData,
   BedType,
+  BlockType,
+  BlockTypeOptionData,
+  InventoryBlockData,
+  InventoryDayData,
+  InventoryGridData,
+  InventoryMetaData,
+  InventoryRowData,
+  OverbookingResultData,
   DashboardTileData,
   OrganizationRefData,
   PageMetaData,
@@ -35,6 +43,7 @@ export type {
   AuditLog,
   BedType,
   BedTypeOptionData,
+  BlockType,
   DashboardData,
   HousekeepingStatus,
   OccupancyStatus,
@@ -68,6 +77,13 @@ export type Amenity = AmenityData;
 export type Bed = BedData;
 export type RoomType = RoomTypeData;
 export type RoomTypeImage = RoomTypeImageData;
+export type InventoryGrid = InventoryGridData;
+export type InventoryRow = InventoryRowData;
+export type InventoryDay = InventoryDayData;
+export type InventoryMeta = InventoryMetaData;
+export type InventoryBlock = InventoryBlockData;
+export type BlockTypeOption = BlockTypeOptionData;
+export type OverbookingResult = OverbookingResultData;
 export type Room = RoomData;
 export type StaffAssignment = StaffAssignmentData;
 export type StaffUser = StaffUserData;
@@ -116,4 +132,26 @@ export interface RoleInput {
   description: string | null;
   permissions: Permission[];
   requires_two_factor: boolean;
+}
+
+export interface InventoryBlockInput {
+  room_type_id: string;
+  type: BlockType;
+  quantity: number;
+  /** First night, YYYY-MM-DD. */
+  from_date: string;
+  /** Last night (inclusive), YYYY-MM-DD. */
+  to_date: string;
+  reason: string;
+  /** ISO-8601; the block is released automatically at this time. */
+  expires_at: string | null;
+}
+
+export interface OverbookingInput {
+  room_type_id: string;
+  from: string;
+  to: string;
+  allowance: number;
+  /** ISO weekdays (1 = Monday … 7 = Sunday); null for every night. */
+  weekdays: number[] | null;
 }

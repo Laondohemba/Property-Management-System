@@ -2,7 +2,7 @@
 
 A web-based property management system for hotels and other hospitality venues, designed to grow into residential and commercial portfolios. It brings front office, reservations, inventory and rates, housekeeping, maintenance, billing and reporting together in one application.
 
-> **Status:** early development (Phase 0: Foundation). See the [roadmap](docs/ROADMAP.md) for what is built and what comes next.
+> **Status:** Phase 0 (Foundation) complete; Phase 1 (core PMS) in progress, starting with inventory. See the [roadmap](docs/ROADMAP.md) for what is built and what comes next.
 
 ## Architecture
 
@@ -51,6 +51,7 @@ php artisan key:generate
 
 # Configure DB_* and REDIS_* in .env, make sure MySQL and Redis are running, then:
 php artisan migrate --seed
+php artisan inventory:extend   # fills two years of inventory for the demo room types
 
 npm install
 npm --prefix resources/angular ci
@@ -96,6 +97,7 @@ There is no public sign-up. Staff are invited from **Settings → Users**; the i
 | `npm test` | Runs the Angular unit tests (Karma + Jasmine, headless Chrome) |
 | `php artisan test` | Runs the backend test suite (PHPUnit) |
 | `php artisan audit:verify` | Checks that the audit trail hash chains are intact |
+| `php artisan inventory:extend` | Creates missing inventory rows up to the horizon (idempotent; also runs daily) |
 | `composer types` | Regenerates the TypeScript types for the BFF contract after a DTO or enum changes |
 | `composer check` | Pint (style), Larastan level 8 (static analysis) and the full backend test suite |
 | `npm --prefix resources/angular run lint` | ESLint for the Angular app |

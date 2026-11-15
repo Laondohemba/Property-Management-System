@@ -73,8 +73,15 @@ export class Shell {
       main.push({ label: 'Audit Log', icon: 'clock', link: '/audit' });
     }
 
+    const revenue: NavItem[] = [];
+
+    if (this.session.permissions().has('inventory.manage')) {
+      revenue.push({ label: 'Inventory', icon: 'calendar', link: '/inventory' });
+    }
+
     return [
       { items: main },
+      ...(revenue.length ? [{ heading: 'Revenue', items: revenue }] : []),
       ...(settings.length ? [{ heading: 'Settings', items: settings }] : []),
       { heading: 'Account', items: [{ label: 'Profile', icon: 'user', link: '/account/profile' }] },
     ];

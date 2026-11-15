@@ -29,6 +29,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/audit/audit-log.page').then((m) => m.AuditLogPage),
       },
       {
+        path: 'inventory',
+        title: 'Inventory',
+        canActivate: [permissionGuard((session) => session.can('inventory.manage'))],
+        loadComponent: () => import('./features/inventory/inventory.page').then((m) => m.InventoryPage),
+      },
+      {
         path: 'settings',
         loadChildren: () => import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
       },

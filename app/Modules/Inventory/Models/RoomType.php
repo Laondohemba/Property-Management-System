@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Inventory\Models;
 
+use App\Modules\Inventory\Services\InventoryLedger;
 use App\Support\Database\HasRecordStamps;
 use App\Support\Tenancy\BelongsToProperty;
 use Database\Factories\RoomTypeFactory;
@@ -73,6 +74,14 @@ class RoomType extends Model implements HasMedia
     public function uniqueIds(): array
     {
         return ['public_id'];
+    }
+
+    /**
+     * A new room type gets its inventory rows up to the horizon at once (CHN-01).
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (RoomType $roomType) => app(InventoryLedger::class)->extend($roomType));
     }
 
     public function getRouteKeyName(): string

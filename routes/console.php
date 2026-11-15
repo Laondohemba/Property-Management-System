@@ -14,6 +14,18 @@ use Illuminate\Support\Facades\Schedule;
 | dispatch work to the queues rather than doing heavy work here.
 */
 
+// Keep two years of inventory ahead of every property's business date (CHN-01).
+Schedule::command('inventory:extend')
+    ->dailyAt('01:15')
+    ->onOneServer()
+    ->withoutOverlapping();
+
+// Holds with an expiry go back on sale on time (CAL-06).
+Schedule::command('inventory:release-expired-blocks')
+    ->everyFiveMinutes()
+    ->onOneServer()
+    ->withoutOverlapping();
+
 Schedule::command('horizon:snapshot')
     ->everyFiveMinutes()
     ->onOneServer()

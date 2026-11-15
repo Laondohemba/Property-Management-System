@@ -6,6 +6,7 @@ namespace App\Modules\Inventory\Models;
 
 use App\Modules\Inventory\Enums\HousekeepingStatus;
 use App\Modules\Inventory\Enums\OccupancyStatus;
+use App\Modules\Inventory\Services\InventoryLedger;
 use App\Support\Database\HasRecordStamps;
 use App\Support\Tenancy\BelongsToProperty;
 use Database\Factories\RoomFactory;
@@ -62,6 +63,41 @@ class Room extends Model
     public function uniqueIds(): array
     {
         return ['public_id'];
+    }
+
+    /**
+     * Inventory follows the active rooms (CHN-01). Runs inside the caller's transaction, so a
+     * change that would leave fewer rooms than are sold or blocked is rolled back with it.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Room $room): void {
+            // wasRecentlyCreated stays true for the instance's lifetime, so "created by this save"
+            // also needs an empty change set (an update on the same instance records changes).
+            $createdNow = $room->wasRecentlyCreated && $room->getChanges() === [];
+
+            if (! $createdNow && ! $room->wasChanged(['is_active', 'room_type_id'])) {
+                return;
+            }
+
+            $ledger = app(InventoryLedger::class);
+
+            if (! $createdNow && $room->wasChanged('room_type_id')) {
+                // The type before this save (the original is already synced by now).
+                $previous = $room->getPrevious()['room_type_id'] ?? null;
+                if ($previous !== null) {
+                    $ledger->syncTotal(RoomType::withTrashed()->withoutGlobalScopes()->findOrFail((int) $previous));
+                }
+            }
+
+            $ledger->syncTotal(RoomType::withTrashed()->withoutGlobalScopes()->findOrFail($room->room_type_id));
+        });
+
+        $sync = fn (Room $room) => app(InventoryLedger::class)
+            ->syncTotal(RoomType::withTrashed()->withoutGlobalScopes()->findOrFail($room->room_type_id));
+
+        static::deleted($sync);
+        static::restored($sync);
     }
 
     public function getRouteKeyName(): string

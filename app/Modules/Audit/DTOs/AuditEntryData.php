@@ -10,6 +10,7 @@ use App\Modules\Identity\DTOs\PropertyRefData;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\User;
 use App\Modules\Inventory\Models\Amenity;
+use App\Modules\Inventory\Models\InventoryBlock;
 use App\Modules\Inventory\Models\Room;
 use App\Modules\Inventory\Models\RoomType;
 use App\Modules\Property\Models\Organization;
@@ -77,6 +78,7 @@ class AuditEntryData extends Data
         $label = match (true) {
             $subject instanceof User => $subject->email,
             $subject instanceof Room => 'Room '.$subject->number,
+            $subject instanceof InventoryBlock => $subject->type->label().' · '.$subject->from_date->toDateString().' to '.$subject->to_date->toDateString(),
             $subject instanceof RoomType, $subject instanceof Property => $subject->name.' ('.$subject->code.')',
             $subject instanceof Amenity, $subject instanceof Organization => $subject->name,
             $subject instanceof Role => $subject->displayLabel(),

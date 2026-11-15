@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AddAppVersionHeader;
+use App\Http\Middleware\EnsureIdempotency;
 use App\Modules\Identity\Http\Middleware\EnsureAccountIsActive;
 use App\Modules\Identity\Http\Middleware\EnsureTwoFactorEnrolled;
 use App\Modules\Property\Http\Middleware\ResolvePropertyContext;
@@ -54,7 +55,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // X-Property-Id validation (spec §2.7): property | property:optional | property:default.
-        $middleware->alias(['property' => ResolvePropertyContext::class]);
+        // One call: alias() replaces the whole list rather than adding to it.
+        // idempotent: Idempotency-Key on POSTs with money or inventory effects (spec §8.1).
+        $middleware->alias([
+            'property' => ResolvePropertyContext::class,
+            'idempotent' => EnsureIdempotency::class,
+        ]);
 
         // The SPA owns the sign-in page; unauthenticated JSON requests receive 401.
         $middleware->redirectGuestsTo('/login');

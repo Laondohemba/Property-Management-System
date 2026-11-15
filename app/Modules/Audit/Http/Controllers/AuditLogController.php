@@ -10,6 +10,7 @@ use App\Modules\Audit\Models\AuditEntry;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Models\User;
 use App\Modules\Inventory\Models\Amenity;
+use App\Modules\Inventory\Models\InventoryBlock;
 use App\Modules\Inventory\Models\Room;
 use App\Modules\Inventory\Models\RoomType;
 use App\Modules\Property\Models\Property;
@@ -91,6 +92,7 @@ class AuditLogController extends Controller
             'property' => Property::class,
             'room_type' => RoomType::class,
             'room' => Room::class,
+            'inventory_block' => InventoryBlock::class,
             'amenity' => Amenity::class,
             'user' => User::class,
             default => null,

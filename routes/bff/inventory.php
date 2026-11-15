@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Inventory\Http\Controllers\AmenityController;
+use App\Modules\Inventory\Http\Controllers\InventoryBlockController;
+use App\Modules\Inventory\Http\Controllers\InventoryController;
 use App\Modules\Inventory\Http\Controllers\RoomController;
 use App\Modules\Inventory\Http\Controllers\RoomTypeController;
 use App\Modules\Inventory\Http\Controllers\RoomTypeImageController;
@@ -35,4 +37,17 @@ Route::middleware(['auth:sanctum', 'property'])->prefix('settings')->name('setti
     Route::post('rooms/range', [RoomController::class, 'storeRange'])->name('rooms.range');
     Route::get('rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
     Route::patch('rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
+});
+
+/*
+| Master inventory (CHN-01) and blocks (CAL-06): allotments per room type and night.
+*/
+
+Route::middleware(['auth:sanctum', 'property'])->prefix('inventory')->name('inventory.')->group(function () {
+    Route::get('/', [InventoryController::class, 'index'])->name('index');
+    Route::put('overbooking', [InventoryController::class, 'overbooking'])->name('overbooking');
+
+    Route::get('blocks', [InventoryBlockController::class, 'index'])->name('blocks.index');
+    Route::post('blocks', [InventoryBlockController::class, 'store'])->middleware('idempotent')->name('blocks.store');
+    Route::post('blocks/{block}/release', [InventoryBlockController::class, 'release'])->name('blocks.release');
 });
